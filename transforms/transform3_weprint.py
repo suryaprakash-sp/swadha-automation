@@ -52,4 +52,4 @@ def export_to_weprint(sheets_manager):
     if len(output) > 1:
         sheets_manager.format_as_text(SHEET_WEPRINT, f"B2:B{len(output)}")
 
-    print(f"✓ WePrint data exported successfully! {total_labels} labels generated")
+    print(f"[OK] WePrint data exported successfully! {total_labels} labels generated")

@@ -33,7 +33,7 @@ def main():
     try:
         # Initialize Google Sheets connection
         sheets = SheetsManager()
-        print("✓ Successfully connected to Google Sheets!\n")
+        print("[OK] Successfully connected to Google Sheets!\n")
 
         while True:
             print_menu()
@@ -68,26 +68,26 @@ def main():
                     print()
                     export_to_weprint(sheets)
                     print("\n" + "="*50)
-                    print("✓ ALL OPERATIONS COMPLETED SUCCESSFULLY!")
+                    print("[OK] ALL OPERATIONS COMPLETED SUCCESSFULLY!")
                     print("="*50)
-                    print("✓ Inventory consolidated")
-                    print("✓ MyBillBook data exported")
-                    print("✓ WePrint data exported")
+                    print("[OK] Inventory consolidated")
+                    print("[OK] MyBillBook data exported")
+                    print("[OK] WePrint data exported")
                     print("="*50)
                 except Exception as e:
-                    print(f"\n✗ Error during operations: {str(e)}")
+                    print(f"\n[ERROR] Error during operations: {str(e)}")
 
             elif choice == '5':
                 print("\nExiting... Goodbye!")
                 sys.exit(0)
 
             else:
-                print("\n✗ Invalid choice. Please enter 1-5.")
+                print("\n[ERROR] Invalid choice. Please enter 1-5.")
 
             input("\nPress Enter to continue...")
 
     except FileNotFoundError as e:
-        print(f"\n✗ Error: {str(e)}")
+        print(f"\n[ERROR] Error: {str(e)}")
         print("\nPlease ensure you have:")
         print("1. Created credentials.json from Google Cloud Console")
         print("2. Placed it in the project directory")
@@ -95,7 +95,7 @@ def main():
         sys.exit(1)
 
     except Exception as e:
-        print(f"\n✗ An error occurred: {str(e)}")
+        print(f"\n[ERROR] An error occurred: {str(e)}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

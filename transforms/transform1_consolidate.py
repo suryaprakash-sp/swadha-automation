@@ -162,4 +162,4 @@ def consolidate_inventory(sheets_manager):
 
         sheets_manager.write_formulas(SHEET_INVENTORY, formulas_g, 'G2')
 
-    print(f"✓ Inventory consolidated successfully! {len(output) - 1} items processed")
+    print(f"[OK] Inventory consolidated successfully! {len(output) - 1} items processed")

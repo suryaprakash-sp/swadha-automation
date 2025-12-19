@@ -161,6 +161,6 @@ def export_to_mybillbook(sheets_manager):
     if len(output_update) > 1:
         sheets_manager.format_as_text(SHEET_MYBILLBOOK_UPDATE, f"D2:D{len(output_update)}")
 
-    print(f"✓ MyBillBook data exported successfully!")
+    print(f"[OK] MyBillBook data exported successfully!")
     print(f"  ADD sheet: {len(output_add) - 1} items")
     print(f"  UPDATE sheet: {len(output_update) - 1} items")
