@@ -71,14 +71,14 @@ def export_to_mybillbook(sheets_manager):
 
     # Process each inventory row
     for inv_row in inventory_rows:
-        # Ensure row has enough columns
-        while len(inv_row) < 9:
+        # Ensure row has enough columns (now 8 columns: A-H)
+        while len(inv_row) < 8:
             inv_row.append("")
 
         # Match raw rows based on Type (Category), Cost Price, and Selling Price
         matching_raw_rows = []
         for raw_row in raw_rows:
-            while len(raw_row) < 8:
+            while len(raw_row) < 5:
                 raw_row.append("")
 
             # Compare: Type (col A), Cost Price (col C), Selling Price (col E)
@@ -110,7 +110,7 @@ def export_to_mybillbook(sheets_manager):
                     raw_row[5],           # Item Name from Column F (Already Present Name)
                     "",                   # Description
                     raw_row[0],           # Category (Type from Column A)
-                    inv_row[8],           # Item code (Barcode from inventory Column I)
+                    inv_row[7],           # Item code (Barcode from inventory Column H, index 7)
                     "",                   # HSN Code
                     "",                   # GST Tax Rate(%)
                     raw_row[4],           # Sales Price (Column E)
@@ -131,7 +131,7 @@ def export_to_mybillbook(sheets_manager):
                 "PIECES",             # Unit
                 "",                   # Alternate Unit
                 "",                   # Conversion Rate
-                inv_row[8],           # Item code (Barcode from inventory Column I)
+                inv_row[7],           # Item code (Barcode from inventory Column H, index 7)
                 "",                   # HSN Code
                 "",                   # GST Tax Rate(%)
                 inv_row[4],           # Sales Price

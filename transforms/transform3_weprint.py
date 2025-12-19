@@ -30,12 +30,12 @@ def export_to_weprint(sheets_manager):
     # Process each inventory row
     total_labels = 0
     for row in rows:
-        # Ensure row has enough columns
-        while len(row) < 9:
+        # Ensure row has enough columns (now 8 columns: A-H)
+        while len(row) < 8:
             row.append("")
 
         name = row[1]           # Column B - Name
-        barcode = row[8]        # Column I - Barcode
+        barcode = row[7]        # Column H - Barcode (index 7)
         price = row[4]          # Column E - Selling Price
         quantity = int(float(row[3]) if row[3] else 0)  # Column D - Quantity
 

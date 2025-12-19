@@ -37,33 +37,6 @@ def generate_barcode(cost_price):
     return f"{prefix} {reversed_price}{suffix}"
 
 
-def find_existing_name(rows, category, item_code):
-    """
-    Search through raw data for matching category and item code
-    Returns name from column B or F
-    """
-    for row in rows:
-        if row[0] == category and row[2] == item_code:
-            # First check column B (index 1)
-            if len(row) > 1 and row[1] and str(row[1]).strip():
-                return str(row[1])
-            # Then check column F (index 5)
-            if len(row) > 5 and row[5] and str(row[5]).strip():
-                return str(row[5])
-    return None
-
-
-def find_existing_barcode(rows, category, item_code):
-    """
-    Search through raw data for matching category and item code
-    Returns barcode from column G
-    """
-    for row in rows:
-        if row[0] == category and row[2] == item_code:
-            # Check column G (index 6)
-            if len(row) > 6 and row[6] and str(row[6]).strip():
-                return str(row[6])
-    return None
 
 
 def consolidate_inventory(sheets_manager):
@@ -93,11 +66,14 @@ def consolidate_inventory(sheets_manager):
     consolidated = {}
 
     for row in rows:
-        # Ensure row has enough columns
-        while len(row) < 8:
+        # Ensure row has exactly 5 columns (A-E)
+        while len(row) < 5:
             row.append("")
+        # Keep only first 5 columns
+        row = row[:5]
 
         # Create key from columns A, B, C, E (indices 0, 1, 2, 4)
+        # Type | Name | Cost Price | Selling Price
         key = f"{row[0]}|{row[1]}|{row[2]}|{row[4]}"
 
         if key in consolidated:
@@ -108,58 +84,56 @@ def consolidate_inventory(sheets_manager):
 
     print(f"Consolidated into {len(consolidated)} unique items")
 
-    # Prepare output
-    output = [headers]
+    # Prepare output with headers (add columns for F, G, H)
+    output_headers = headers + ["Total Cost Price", "Total Selling Price", "Barcode"]
+    output_rows = []
+    barcodes = []
 
     for row in consolidated.values():
-        # Generate name based on existing data
-        existing_name = find_existing_name(rows, row[0], row[2])
-        if existing_name:
-            # If name exists in raw, format as: Category + Name + Random
-            row[1] = generate_name_with_existing(row[0], existing_name)
+        # Generate name: Type + Original Name + Random 4 letters
+        original_name = row[1] if row[1] and str(row[1]).strip() else ""
+        if original_name:
+            row[1] = generate_name_with_existing(row[0], original_name)
         else:
-            # If no name in raw, generate as: Category + Random
             row[1] = generate_name(row[0])
 
-        # Check for existing barcode before generating
-        existing_barcode = find_existing_barcode(rows, row[0], row[2])
-        if existing_barcode:
-            barcode = existing_barcode
-        else:
-            barcode = generate_barcode(row[2])
+        # Generate barcode based on cost price
+        barcode = generate_barcode(row[2])
+        barcodes.append(barcode)
 
-        # Append barcode to row
-        row.append(barcode)
+        # Keep only 5 columns: Type, Name, Cost, Qty, Sell
+        output_rows.append(row[:5])
 
-        output.append(row)
+    # Combine headers and rows
+    output = [output_headers] + output_rows
 
-    # Add Barcode column to headers
-    output[0].append("Barcode")
-
-    # Clear and write to Inventory sheet
+    # Clear and write to Inventory sheet (only columns A-E and header for F)
     sheets_manager.clear_sheet(SHEET_INVENTORY)
     sheets_manager.write_sheet(SHEET_INVENTORY, output)
 
-    # Format Item Code column (C) and Barcode column (I) as plain text
-    if len(output) > 1:
-        # Column C (Item Code) - assuming column I is barcode (index 8)
-        sheets_manager.format_as_text(SHEET_INVENTORY, f"C2:C{len(output)}")
-        sheets_manager.format_as_text(SHEET_INVENTORY, f"I2:I{len(output)}")
+    # Add formulas for columns F and G, and barcodes to H
+    if len(output_rows) > 0:
+        num_rows = len(output_rows)
 
-    # Add formulas for columns F and G
-    if len(output) > 1:
         # Column F: =C*D (Cost Price * Quantity)
         formulas_f = []
-        for i in range(2, len(output) + 1):
+        for i in range(2, num_rows + 2):
             formulas_f.append([f"=C{i}*D{i}"])
-
         sheets_manager.write_formulas(SHEET_INVENTORY, formulas_f, 'F2')
 
         # Column G: =D*E (Quantity * Selling Price)
         formulas_g = []
-        for i in range(2, len(output) + 1):
+        for i in range(2, num_rows + 2):
             formulas_g.append([f"=D{i}*E{i}"])
-
         sheets_manager.write_formulas(SHEET_INVENTORY, formulas_g, 'G2')
 
-    print(f"[OK] Inventory consolidated successfully! {len(output) - 1} items processed")
+        # Column H: Barcodes
+        barcode_data = [[barcode] for barcode in barcodes]
+        sheets_manager.write_sheet(SHEET_INVENTORY, barcode_data, 'H2')
+
+    # Format Cost Price column (C) and Barcode column (H) as plain text
+    if len(output_rows) > 0:
+        sheets_manager.format_as_text(SHEET_INVENTORY, f"C2:C{len(output_rows) + 1}")
+        sheets_manager.format_as_text(SHEET_INVENTORY, f"H2:H{len(output_rows) + 1}")
+
+    print(f"[OK] Inventory consolidated successfully! {len(output_rows)} items processed")
