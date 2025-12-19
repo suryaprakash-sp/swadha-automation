@@ -62,7 +62,7 @@ class SheetsManager:
 
     def write_sheet(self, sheet_name, data, start_cell='A1'):
         """
-        Write data to a Google Sheet
+        Write data to a Google Sheet (creates sheet if it doesn't exist)
 
         Args:
             sheet_name: Name of the sheet tab
@@ -70,6 +70,10 @@ class SheetsManager:
             start_cell: Starting cell (default 'A1')
         """
         try:
+            # Create sheet if it doesn't exist
+            if not self.sheet_exists(sheet_name):
+                self.create_sheet(sheet_name)
+
             range_name = f"{sheet_name}!{start_cell}"
 
             body = {
@@ -90,9 +94,70 @@ class SheetsManager:
             print(f"An error occurred: {error}")
             return None
 
-    def clear_sheet(self, sheet_name):
-        """Clear all data from a sheet"""
+    def sheet_exists(self, sheet_name):
+        """
+        Check if a sheet exists in the spreadsheet
+
+        Args:
+            sheet_name: Name of the sheet to check
+
+        Returns:
+            Boolean indicating if sheet exists
+        """
         try:
+            sheet_metadata = self.service.spreadsheets().get(
+                spreadsheetId=self.spreadsheet_id
+            ).execute()
+
+            for sheet in sheet_metadata.get('sheets', []):
+                if sheet['properties']['title'] == sheet_name:
+                    return True
+            return False
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            return False
+
+    def create_sheet(self, sheet_name):
+        """
+        Create a new sheet in the spreadsheet
+
+        Args:
+            sheet_name: Name of the sheet to create
+        """
+        try:
+            if self.sheet_exists(sheet_name):
+                print(f"Sheet {sheet_name} already exists")
+                return
+
+            requests = [{
+                'addSheet': {
+                    'properties': {
+                        'title': sheet_name
+                    }
+                }
+            }]
+
+            body = {'requests': requests}
+
+            self.service.spreadsheets().batchUpdate(
+                spreadsheetId=self.spreadsheet_id,
+                body=body
+            ).execute()
+
+            print(f"Created sheet: {sheet_name}")
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+
+    def clear_sheet(self, sheet_name):
+        """Clear all data from a sheet (creates sheet if it doesn't exist)"""
+        try:
+            # Create sheet if it doesn't exist
+            if not self.sheet_exists(sheet_name):
+                self.create_sheet(sheet_name)
+                return  # New sheet is already empty
+
             self.service.spreadsheets().values().clear(
                 spreadsheetId=self.spreadsheet_id,
                 range=sheet_name
@@ -172,7 +237,7 @@ class SheetsManager:
 
     def write_formulas(self, sheet_name, formulas, start_cell='A1'):
         """
-        Write formulas to a Google Sheet
+        Write formulas to a Google Sheet (creates sheet if it doesn't exist)
 
         Args:
             sheet_name: Name of the sheet tab
@@ -180,6 +245,10 @@ class SheetsManager:
             start_cell: Starting cell (default 'A1')
         """
         try:
+            # Create sheet if it doesn't exist
+            if not self.sheet_exists(sheet_name):
+                self.create_sheet(sheet_name)
+
             range_name = f"{sheet_name}!{start_cell}"
 
             body = {
