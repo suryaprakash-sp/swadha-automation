@@ -1,0 +1,209 @@
+import os.path
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from config import SCOPES, CREDENTIALS_FILE, TOKEN_FILE, SPREADSHEET_ID
+
+
+class SheetsManager:
+    def __init__(self):
+        self.creds = None
+        self.service = None
+        self.spreadsheet_id = SPREADSHEET_ID
+        self._authenticate()
+
+    def _authenticate(self):
+        """Authenticate with Google Sheets API using OAuth 2.0"""
+        if os.path.exists(TOKEN_FILE):
+            self.creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+
+        if not self.creds or not self.creds.valid:
+            if self.creds and self.creds.expired and self.creds.refresh_token:
+                self.creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    CREDENTIALS_FILE, SCOPES)
+                self.creds = flow.run_local_server(port=0)
+
+            with open(TOKEN_FILE, 'w') as token:
+                token.write(self.creds.to_json())
+
+        self.service = build('sheets', 'v4', credentials=self.creds)
+
+    def read_sheet(self, sheet_name, range_notation=None):
+        """
+        Read data from a Google Sheet
+
+        Args:
+            sheet_name: Name of the sheet tab
+            range_notation: Optional range (e.g., 'A1:D10'). If None, reads all data.
+
+        Returns:
+            List of lists containing the sheet data
+        """
+        try:
+            if range_notation:
+                range_name = f"{sheet_name}!{range_notation}"
+            else:
+                range_name = sheet_name
+
+            result = self.service.spreadsheets().values().get(
+                spreadsheetId=self.spreadsheet_id,
+                range=range_name
+            ).execute()
+
+            return result.get('values', [])
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            return []
+
+    def write_sheet(self, sheet_name, data, start_cell='A1'):
+        """
+        Write data to a Google Sheet
+
+        Args:
+            sheet_name: Name of the sheet tab
+            data: List of lists containing the data to write
+            start_cell: Starting cell (default 'A1')
+        """
+        try:
+            range_name = f"{sheet_name}!{start_cell}"
+
+            body = {
+                'values': data
+            }
+
+            result = self.service.spreadsheets().values().update(
+                spreadsheetId=self.spreadsheet_id,
+                range=range_name,
+                valueInputOption='RAW',
+                body=body
+            ).execute()
+
+            print(f"{result.get('updatedCells')} cells updated in {sheet_name}")
+            return result
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            return None
+
+    def clear_sheet(self, sheet_name):
+        """Clear all data from a sheet"""
+        try:
+            self.service.spreadsheets().values().clear(
+                spreadsheetId=self.spreadsheet_id,
+                range=sheet_name
+            ).execute()
+            print(f"Sheet {sheet_name} cleared")
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+
+    def format_as_text(self, sheet_name, range_notation):
+        """
+        Format cells as plain text (to prevent scientific notation for barcodes)
+
+        Args:
+            sheet_name: Name of the sheet tab
+            range_notation: Range to format (e.g., 'B2:B100')
+        """
+        try:
+            # Get sheet ID first
+            sheet_metadata = self.service.spreadsheets().get(
+                spreadsheetId=self.spreadsheet_id
+            ).execute()
+
+            sheet_id = None
+            for sheet in sheet_metadata.get('sheets', []):
+                if sheet['properties']['title'] == sheet_name:
+                    sheet_id = sheet['properties']['sheetId']
+                    break
+
+            if sheet_id is None:
+                print(f"Sheet {sheet_name} not found")
+                return
+
+            # Parse range notation
+            import re
+            match = re.match(r'([A-Z]+)(\d+):([A-Z]+)(\d+)', range_notation)
+            if not match:
+                print("Invalid range notation")
+                return
+
+            start_col = self._column_letter_to_index(match.group(1))
+            start_row = int(match.group(2)) - 1
+            end_col = self._column_letter_to_index(match.group(3))
+            end_row = int(match.group(4)) - 1
+
+            requests = [{
+                'repeatCell': {
+                    'range': {
+                        'sheetId': sheet_id,
+                        'startRowIndex': start_row,
+                        'endRowIndex': end_row + 1,
+                        'startColumnIndex': start_col,
+                        'endColumnIndex': end_col + 1
+                    },
+                    'cell': {
+                        'userEnteredFormat': {
+                            'numberFormat': {
+                                'type': 'TEXT'
+                            }
+                        }
+                    },
+                    'fields': 'userEnteredFormat.numberFormat'
+                }
+            }]
+
+            body = {'requests': requests}
+
+            self.service.spreadsheets().batchUpdate(
+                spreadsheetId=self.spreadsheet_id,
+                body=body
+            ).execute()
+
+            print(f"Formatted {range_notation} in {sheet_name} as text")
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+
+    def write_formulas(self, sheet_name, formulas, start_cell='A1'):
+        """
+        Write formulas to a Google Sheet
+
+        Args:
+            sheet_name: Name of the sheet tab
+            formulas: List of lists containing formulas
+            start_cell: Starting cell (default 'A1')
+        """
+        try:
+            range_name = f"{sheet_name}!{start_cell}"
+
+            body = {
+                'values': formulas
+            }
+
+            result = self.service.spreadsheets().values().update(
+                spreadsheetId=self.spreadsheet_id,
+                range=range_name,
+                valueInputOption='USER_ENTERED',  # Important: USER_ENTERED to process formulas
+                body=body
+            ).execute()
+
+            print(f"{result.get('updatedCells')} formula cells updated in {sheet_name}")
+            return result
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            return None
+
+    @staticmethod
+    def _column_letter_to_index(column_letter):
+        """Convert column letter (A, B, AA, etc.) to zero-based index"""
+        index = 0
+        for char in column_letter:
+            index = index * 26 + (ord(char.upper()) - ord('A')) + 1
+        return index - 1
