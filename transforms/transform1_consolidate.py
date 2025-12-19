@@ -131,9 +131,20 @@ def consolidate_inventory(sheets_manager):
         barcode_data = [[barcode] for barcode in barcodes]
         sheets_manager.write_sheet(SHEET_INVENTORY, barcode_data, 'H2')
 
-    # Format Cost Price column (C) and Barcode column (H) as plain text
+    # Apply column formatting
     if len(output_rows) > 0:
-        sheets_manager.format_as_text(SHEET_INVENTORY, f"C2:C{len(output_rows) + 1}")
-        sheets_manager.format_as_text(SHEET_INVENTORY, f"H2:H{len(output_rows) + 1}")
+        last_row = len(output_rows) + 1
+
+        # Text columns
+        sheets_manager.format_as_text(SHEET_INVENTORY, f"A2:A{last_row}")  # Type
+        sheets_manager.format_as_text(SHEET_INVENTORY, f"B2:B{last_row}")  # Name
+        sheets_manager.format_as_text(SHEET_INVENTORY, f"H2:H{last_row}")  # Barcode
+
+        # Numeric columns
+        sheets_manager.format_as_number(SHEET_INVENTORY, f"C2:C{last_row}", decimal_places=2)  # Per Item CP
+        sheets_manager.format_as_number(SHEET_INVENTORY, f"D2:D{last_row}", decimal_places=0)  # Quantity
+        sheets_manager.format_as_number(SHEET_INVENTORY, f"E2:E{last_row}", decimal_places=2)  # Per Item SP
+        sheets_manager.format_as_number(SHEET_INVENTORY, f"F2:F{last_row}", decimal_places=2)  # Total CP
+        sheets_manager.format_as_number(SHEET_INVENTORY, f"G2:G{last_row}", decimal_places=2)  # Total SP
 
     print(f"[OK] Inventory consolidated successfully! {len(output_rows)} items processed")
