@@ -60,7 +60,7 @@ class SheetsManager:
             print(f"An error occurred: {error}")
             return []
 
-    def write_sheet(self, sheet_name, data, start_cell='A1'):
+    def write_sheet(self, sheet_name, data, start_cell='A1', value_input_option='USER_ENTERED'):
         """
         Write data to a Google Sheet (creates sheet if it doesn't exist)
 
@@ -68,6 +68,9 @@ class SheetsManager:
             sheet_name: Name of the sheet tab
             data: List of lists containing the data to write
             start_cell: Starting cell (default 'A1')
+            value_input_option: How to interpret input values (default 'USER_ENTERED')
+                - 'USER_ENTERED': Parse values (numbers as numbers, formulas as formulas)
+                - 'RAW': Store exactly as provided (everything as strings)
         """
         try:
             # Create sheet if it doesn't exist
@@ -83,7 +86,7 @@ class SheetsManager:
             result = self.service.spreadsheets().values().update(
                 spreadsheetId=self.spreadsheet_id,
                 range=range_name,
-                valueInputOption='RAW',
+                valueInputOption=value_input_option,
                 body=body
             ).execute()
 
