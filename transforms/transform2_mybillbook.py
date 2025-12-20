@@ -19,18 +19,17 @@ def export_to_mybillbook(sheets_manager):
     """
     Export data to MyBillBook format (ADD and UPDATE sheets)
 
-    NEW Logic (uses synced MyBillBook inventory):
-    - Reads consolidated "Inventory" sheet (69 items)
-    - Reads synced "myBillBook Inventory" sheet (352 items from MyBillBook API)
-    - For each inventory item, check if it exists in MyBillBook by matching SKU Code (barcode)
-    - If found in MyBillBook → UPDATE tab (update existing item)
-    - If not found → ADD tab (new item to add)
+    NEW Logic (uses Transform 1 matching):
+    - Reads consolidated "Inventory" sheet with new columns:
+      - Column I: "Already Present" (Yes/No)
+      - Column J: "Inventory Item Barcode" (actual barcode to use)
+    - If "Already Present" = Yes → UPDATE tab
+    - If "Already Present" = No → ADD tab
     """
     print("Starting MyBillBook export...")
 
-    # Read inventory and MyBillBook current data
+    # Read inventory data
     inventory_data = sheets_manager.read_sheet(SHEET_INVENTORY)
-    mybillbook_data = sheets_manager.read_sheet(SHEET_MYBILLBOOK_CURRENT)
 
     if not inventory_data:
         print("Missing required data in Inventory sheet")
@@ -38,25 +37,6 @@ def export_to_mybillbook(sheets_manager):
 
     inventory_rows = inventory_data[1:]
     print(f"Processing {len(inventory_rows)} inventory items...")
-
-    # Build lookup dictionary for MyBillBook items by SKU Code (barcode)
-    mybillbook_items = {}
-    if mybillbook_data and len(mybillbook_data) > 1:
-        mybillbook_rows = mybillbook_data[1:]
-        print(f"Checking against {len(mybillbook_rows)} existing MyBillBook items...")
-
-        for mb_row in mybillbook_rows:
-            if len(mb_row) > 2:  # Need at least ID, Name, SKU Code
-                sku_code = str(mb_row[2]).strip() if mb_row[2] else ""  # Column C: SKU Code
-                if sku_code:
-                    mybillbook_items[sku_code] = {
-                        'id': mb_row[0] if len(mb_row) > 0 else "",
-                        'name': mb_row[1] if len(mb_row) > 1 else "",
-                        'sku_code': sku_code,
-                        'quantity': safe_float(mb_row[7]) if len(mb_row) > 7 else 0,  # Column H: Quantity
-                    }
-    else:
-        print("Warning: No MyBillBook inventory data found. All items will go to ADD tab.")
 
     # Headers for ADD tab
     headers_add = [
@@ -106,28 +86,22 @@ def export_to_mybillbook(sheets_manager):
 
     # Process each inventory row
     for inv_row in inventory_rows:
-        # Ensure row has enough columns (now 8 columns: A-H)
-        while len(inv_row) < 8:
+        # Ensure row has enough columns (now 10 columns: A-J)
+        while len(inv_row) < 10:
             inv_row.append("")
 
-        # Get barcode from inventory (Column H, index 7)
-        barcode = str(inv_row[7]).strip() if inv_row[7] else ""
+        # Get flags from new columns
+        already_present = str(inv_row[8]).strip() if len(inv_row) > 8 and inv_row[8] else "No"  # Column I
+        inventory_barcode = str(inv_row[9]).strip() if len(inv_row) > 9 and inv_row[9] else ""  # Column J
 
-        # Check if this item exists in MyBillBook (by SKU Code/barcode)
-        if barcode and barcode in mybillbook_items:
+        # Check if item already exists in MyBillBook
+        if already_present.lower() == "yes":
             # Item EXISTS in MyBillBook → UPDATE tab
-            mb_item = mybillbook_items[barcode]
-
-            # Calculate new stock: MyBillBook current stock + new inventory quantity
-            mybillbook_stock = mb_item['quantity']
-            new_inventory_stock = safe_float(inv_row[3])  # Column D: Quantity
-            total_stock = mybillbook_stock + new_inventory_stock
-
             output_update.append([
-                mb_item['name'],      # Item Name (use existing MyBillBook name)
+                inv_row[1],           # Item Name (existing MyBillBook name)
                 "",                   # Description
                 inv_row[0],           # Category (Type from Column A)
-                barcode,              # Item code (Barcode)
+                inventory_barcode,    # Item code (Barcode from Column J)
                 "",                   # HSN Code
                 "",                   # GST Tax Rate(%)
                 inv_row[4],           # Sales Price (Column E)
@@ -135,12 +109,12 @@ def export_to_mybillbook(sheets_manager):
                 inv_row[2],           # Purchase Price (Column C)
                 "Inclusive",          # Purchase Tax inclusive
                 inv_row[4],           # MRP (same as Sales Price)
-                total_stock,          # Current stock (MyBillBook stock + new stock)
+                inv_row[3],           # Current stock (just use new quantity)
                 0,                    # Low stock alert quantity
                 "No"                  # Visible on Online Store?
             ])
             update_count += 1
-            print(f"  UPDATE: {mb_item['name']} (SKU: {barcode}) - Stock: {mybillbook_stock} + {new_inventory_stock} = {total_stock}")
+            print(f"  UPDATE: {inv_row[1]} (SKU: {inventory_barcode})")
 
         else:
             # Item does NOT exist in MyBillBook → ADD tab
@@ -151,7 +125,7 @@ def export_to_mybillbook(sheets_manager):
                 "PIECES",             # Unit
                 "",                   # Alternate Unit
                 "",                   # Conversion Rate
-                barcode,              # Item code (Barcode)
+                inventory_barcode,    # Item code (Barcode from Column J)
                 "",                   # HSN Code
                 "",                   # GST Tax Rate(%)
                 inv_row[4],           # Sales Price
