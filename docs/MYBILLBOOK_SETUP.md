@@ -125,19 +125,49 @@ Fetched X items from MyBillBook
 
 The sync pulls the following data from MyBillBook:
 
+### Basic Information
 | Field | Description |
 |-------|-------------|
 | ID | MyBillBook item ID |
 | Name | Product name |
 | SKU Code | Item code/barcode |
 | Category | Product category |
+| Description | Item description |
+
+### Pricing
+| Field | Description |
+|-------|-------------|
 | MRP | Maximum retail price |
 | Selling Price | Current selling price |
+| Sales Price | Sales price (may differ from selling price) |
 | Purchase Price | Cost price |
+| Wholesale Price | Bulk/wholesale pricing |
+| Wholesale Min Qty | Minimum quantity for wholesale price |
+
+### Inventory
+| Field | Description |
+|-------|-------------|
 | Quantity | Current stock level |
-| Unit | Unit of measurement |
+| Minimum Quantity | Minimum stock level / reorder point |
+| Unit | Unit of measurement (short) |
+| Unit Long | Unit of measurement (full name) |
+
+### Tax & Compliance
+| Field | Description |
+|-------|-------------|
 | GST % | GST percentage |
-| Description | Item description |
+| Sales Tax Included | Whether tax is included in selling price |
+| Purchase Tax Included | Whether tax is included in purchase price |
+
+### Metadata
+| Field | Description |
+|-------|-------------|
+| Item Type | Product type identifier |
+| Show on Store | Whether item is visible on online store |
+| Excel Imported | Whether item was imported from Excel |
+| Created Date | When the item was created in MyBillBook |
+| Identification Code | Additional identification code |
+| Conversion Factor | Unit conversion factor |
 
 This data is written to the **"myBillBook Inventory"** sheet in Google Sheets.
 
