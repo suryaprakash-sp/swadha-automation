@@ -5,9 +5,10 @@ Sync MyBillBook inventory to Google Sheets
 from typing import List, Dict, Any
 from mybillbook.api_client import MyBillBookAPI
 from mybillbook.config import has_credentials
+from config import SHEET_MYBILLBOOK_CURRENT
 
 
-SYNC_SHEET_NAME = "MyBillBook Current Inventory"
+SYNC_SHEET_NAME = SHEET_MYBILLBOOK_CURRENT
 
 
 def fetch_mybillbook_inventory() -> List[Dict[str, Any]]:

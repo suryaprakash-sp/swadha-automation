@@ -21,7 +21,17 @@ class MyBillBookAPI:
         self.base_url = BASE_URL
         self.headers = get_headers()
         self.session = requests.Session()
-        self.session.headers.update(self.headers)
+
+        # Update headers carefully to avoid encoding issues
+        for key, value in self.headers.items():
+            if value:  # Only set non-empty headers
+                # Encode to bytes and decode to handle special characters
+                try:
+                    self.session.headers[key] = value
+                except Exception:
+                    # Skip headers that can't be encoded
+                    print(f"Warning: Skipping header {key} due to encoding issue")
+                    pass
 
     def _make_request(
         self,
