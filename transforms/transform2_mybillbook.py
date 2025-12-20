@@ -1,6 +1,20 @@
 from config import SHEET_RAW, SHEET_INVENTORY, SHEET_MYBILLBOOK_ADD, SHEET_MYBILLBOOK_UPDATE
 
 
+def safe_float(value):
+    """
+    Safely convert a value to float, handling comma-separated thousands
+    e.g., "1,199" -> 1199.0
+    """
+    if not value:
+        return 0.0
+    try:
+        # Remove commas and convert to float
+        return float(str(value).replace(',', ''))
+    except (ValueError, AttributeError):
+        return 0.0
+
+
 def export_to_mybillbook(sheets_manager):
     """
     Export data to MyBillBook format (ADD and UPDATE sheets)
@@ -83,8 +97,8 @@ def export_to_mybillbook(sheets_manager):
 
             # Compare: Type (col A), Cost Price (col C), Selling Price (col E)
             if (raw_row[0] == inv_row[0] and
-                float(raw_row[2] or 0) == float(inv_row[2] or 0) and
-                float(raw_row[4] or 0) == float(inv_row[4] or 0)):
+                safe_float(raw_row[2]) == safe_float(inv_row[2]) and
+                safe_float(raw_row[4]) == safe_float(inv_row[4])):
                 matching_raw_rows.append(raw_row)
 
         # Check if any matching raw row has data in column F (index 5)
