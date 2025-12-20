@@ -142,7 +142,7 @@
                                     |
                                     v
 +===========================================================================+
-|             STEP 2: TRANSFORM 2 - MYBILLBOOK ADD/UPDATE                  |
+|             STEP 2: TRANSFORM 2 - MYBILLBOOK ADD/UPDATE                   |
 |                         (Menu Option 2)                                   |
 +===========================================================================+
                                     |
@@ -194,14 +194,14 @@
                                     |
                                     v
 +===========================================================================+
-|              STEP 3: TRANSFORM 3 - WEPRINT LABEL EXPORT                  |
+|              STEP 3: TRANSFORM 3 - WEPRINT LABEL EXPORT                   |
 |                         (Menu Option 3)                                   |
 +===========================================================================+
                                     |
                                     v
                 +-----------------------------------------+
                 |  READ ALL 71 ITEMS FROM INVENTORY       |
-                |  --------------------------------------  |
+                |  -------------------------------------- |
                 |  • Use Column J (actual barcode)        |
                 |  • Duplicate by quantity                |
                 +-----------------------------------------+
@@ -223,7 +223,7 @@
                                     v
                 +-----------------------------------------+
                 |  Google Sheets: "WePrint"               |
-                |  --------------------------------------  |
+                |  -------------------------------------- |
                 |  Product         | Barcode  | Price     |
                 |  ----------------|----------|-----      |
                 |  Ear Rings XCNR  | 84 0110  | 250.00    | <- Label 1
@@ -232,12 +232,12 @@
                 |  Ear Rings XCNR  | 84 0110  | 250.00    | <- Label 4
                 |  Bracelets R AXPZ| 78 0611  | 250.00    | <- Label 1
                 |  Bracelets R AXPZ| 78 0611  | 250.00    | <- Label 2
-                |  ...                                     |
+                |  ...                                    |
                 |  Ear Rings HXXL  | 24 0118  | 250.00    |
                 |  Ear Rings HXXL  | 24 0118  | 250.00    |
-                |  ...                                     |
-                |                                          |
-                |  Total: 299 label rows                   |
+                |  ...                                    |
+                |                                         |
+                |  Total: 299 label rows                  |
                 +-----------------------------------------+
                                     |
                                     v
@@ -253,9 +253,9 @@
 +===========================================================================+
 |                              COMPLETE! ✓                                  |
 |                                                                           |
-|  ✓ MyBillBook updated (69 new + 2 updated)                               |
-|  ✓ Labels ready to print (299 labels)                                    |
-|  ✓ Inventory consolidated and tracked                                    |
+|  ✓ MyBillBook updated (69 new + 2 updated)                                |
+|  ✓ Labels ready to print (299 labels)                                     |
+|  ✓ Inventory consolidated and tracked                                     |
 +===========================================================================+
 ```
 
@@ -267,12 +267,12 @@
 For each RAW item, check MyBillBook inventory:
 
 +---------------------------------------------+
-|  MATCHING CRITERIA (ALL 4 MUST MATCH)      |
+|  MATCHING CRITERIA (ALL 4 MUST MATCH)       |
 +---------------------------------------------+
-|  1. Category (Type)          ✓             |
-|  2. Purchase Price (Cost)    ✓             |
-|  3. Selling Price            ✓             |
-|  4. Name Variant             ✓             |
+|  1. Category (Type)          ✓              |
+|  2. Purchase Price (Cost)    ✓              |
+|  3. Selling Price            ✓              |
+|  4. Name Variant             ✓              |
 +---------------------------------------------+
             |
     +-------+-------+
@@ -334,22 +334,22 @@ Read Column I from Inventory:
 
 ```
 +---------------------------------------------------------------------+
-|  COLUMN I: "Already Present"                                       |
+|  COLUMN I: "Already Present"                                        |
 |  ----------------------------                                       |
-|  • Set by Transform 1 during matching                              |
-|  • "Yes" = Item exists in MyBillBook                               |
-|  • "No" = New item, not in MyBillBook                              |
-|  • Used by Transform 2 to split ADD/UPDATE                         |
+|  • Set by Transform 1 during matching                               |
+|  • "Yes" = Item exists in MyBillBook                                |
+|  • "No" = New item, not in MyBillBook                               |
+|  • Used by Transform 2 to split ADD/UPDATE                          |
 +---------------------------------------------------------------------+
 
 +---------------------------------------------------------------------+
-|  COLUMN J: "Inventory Item Barcode"                                |
+|  COLUMN J: "Inventory Item Barcode"                                 |
 |  ----------------------------                                       |
-|  • Set by Transform 1 (MyBillBook SKU or generated barcode)        |
-|  • MyBillBook SKU if matched (e.g., "84 0110")                     |
-|  • Generated barcode if new (e.g., "24 0118")                      |
-|  • Used by Transform 2 for Item code                               |
-|  • Used by Transform 3 for label barcodes                          |
-|  • THIS IS THE ACTUAL BARCODE TO USE EVERYWHERE                    |
+|  • Set by Transform 1 (MyBillBook SKU or generated barcode)         |
+|  • MyBillBook SKU if matched (e.g., "84 0110")                      |
+|  • Generated barcode if new (e.g., "24 0118")                       |
+|  • Used by Transform 2 for Item code                                |
+|  • Used by Transform 3 for label barcodes                           |
+|  • THIS IS THE ACTUAL BARCODE TO USE EVERYWHERE                     |
 +---------------------------------------------------------------------+
 ```
