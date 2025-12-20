@@ -13,23 +13,33 @@ This project automates inventory data transformations for multiple use cases:
 ## Workflow
 
 ```
-MyBillBook API (Sync Latest Inventory)
+Step 0: MyBillBook API Sync
     ↓
-Google Sheets ("myBillBook Inventory")
+Google Sheets ("myBillBook Inventory" - 352 items synced)
     ↓
-Google Sheets ("Inventory RAW" - Raw Data Entry)
+Google Sheets ("Inventory RAW" - Manual Data Entry, 78 rows)
     ↓
-Transform 1: Consolidate Inventory
+Step 1: Transform 1 - Consolidate + Smart Match
+    ├─ Consolidates duplicates (78 → 71 items)
+    ├─ Matches with MyBillBook inventory (4 criteria)
+    ├─ For MATCHED items (2): Uses MyBillBook name & SKU
+    └─ For NEW items (69): Generates name & barcode
     ↓
-Google Sheets ("Inventory" - Consolidated)
+Google Sheets ("Inventory" - 71 items with columns I & J)
     ↓
-Transform 2: MyBillBook Data Import
+Step 2: Transform 2 - MyBillBook Import
+    ├─ Reads Column I ("Already Present")
+    ├─ IF "Yes" → UPDATE sheet (2 items)
+    └─ IF "No" → ADD sheet (69 items)
     ↓
 Google Sheets ("myBillBook add" + "myBillBook update")
     ↓
-Transform 3: WePrint Export
+Step 3: Transform 3 - WePrint Labels
+    ├─ Reads all 71 items
+    ├─ Uses Column J (Inventory Item Barcode)
+    └─ Duplicates by quantity
     ↓
-Google Sheets ("WePrint" - Label Data)
+Google Sheets ("WePrint" - 299 label rows)
 ```
 
 ## Quick Start
@@ -74,33 +84,43 @@ python main.py
 ```
 0. Sync MyBillBook Inventory (Fetch Latest)
    - Fetches current inventory from MyBillBook API
-   - Writes to "myBillBook Inventory" sheet
-   - Required before Transform 2 for accurate ADD/UPDATE determination
+   - Writes to "myBillBook Inventory" sheet (352 items with 24 columns)
+   - REQUIRED before Transform 1 for accurate matching
    - See: docs/MYBILLBOOK_SETUP.md
 
 1. Consolidate Inventory (Transform 1)
-   - Reads from "Inventory RAW" sheet
-   - Consolidates duplicate items (by Type, Name, Cost Price, Selling Price)
-   - Generates item names and barcodes
-   - Writes to "Inventory" sheet
+   - Reads from "myBillBook Inventory" (352 items) and "Inventory RAW" sheet (78 rows)
+   - Smart matching by: Category + Cost Price + Selling Price + Name variant
+   - Consolidates duplicate items (78 → 71 unique items)
+   - For MATCHED items (2): Uses existing MyBillBook name & SKU
+   - For NEW items (69): Generates unique names and barcodes
+   - Writes to "Inventory" sheet with 10 columns (A-J):
+     * Column I: "Already Present" (Yes/No)
+     * Column J: "Inventory Item Barcode" (actual barcode to use)
    - See: docs/TRANSFORM1_CONSOLIDATE.md
 
 2. MyBillBook Data Import (Transform 2)
-   - Reads from "Inventory RAW" and "Inventory" sheets
-   - Uses "myBillBook Inventory" to determine existing items
-   - Creates two sheets: "myBillBook add" and "myBillBook update"
-   - ADD: New items to add to MyBillBook
-   - UPDATE: Existing items to update in MyBillBook
+   - Reads from "Inventory" sheet (71 items)
+   - Uses Column I ("Already Present") to determine ADD vs UPDATE
+   - Creates two sheets:
+     * "myBillBook add": 69 new items with generated barcodes
+     * "myBillBook update": 2 existing items with MyBillBook SKU codes
+   - CSV import-ready format for MyBillBook
+   - See: docs/TRANSFORM2_MYBILLBOOK.md
 
 3. WePrint Export (Transform 3)
-   - Reads from "Inventory" sheet
-   - Creates "WePrint" sheet with label data
-   - Duplicates rows based on quantity (for printing labels)
+   - Reads from "Inventory" sheet (71 items)
+   - Uses Column J (Inventory Item Barcode) for labels
+   - Creates "WePrint" sheet with 299 label rows
+   - Duplicates rows based on quantity (for printing multiple labels)
+   - 3 columns: Product, Barcode, Price
+   - See: docs/TRANSFORM3_WEPRINT.md
 
 4. Run All Operations
-   - Syncs MyBillBook inventory
-   - Runs all three transforms in sequence
+   - Syncs MyBillBook inventory (Step 0)
+   - Runs all three transforms in sequence (Steps 1-3)
    - Recommended for complete pipeline execution
+   - Total time: ~15-20 seconds
 ```
 
 ## Project Structure
@@ -117,6 +137,8 @@ swadha-automation/
 ├── .env.example                        # MyBillBook credentials template
 ├── docs/
 │   ├── TRANSFORM1_CONSOLIDATE.md       # Transform 1 documentation
+│   ├── TRANSFORM2_MYBILLBOOK.md        # Transform 2 documentation
+│   ├── TRANSFORM3_WEPRINT.md           # Transform 3 documentation
 │   └── MYBILLBOOK_SETUP.md             # MyBillBook API setup guide
 ├── mybillbook/
 │   ├── api_client.py                   # MyBillBook API client
