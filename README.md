@@ -10,6 +10,15 @@ This project automates inventory data transformations for multiple use cases:
 2. **Transform 2**: MyBillBook format (inventory management)
 3. **Transform 3**: WePrint format (label printing)
 
+## 📖 Documentation
+
+- **[Simple Workflow Guide](docs/SIMPLE_WORKFLOW.md)** - Easy-to-understand guide for everyone (recommended for first-time users!)
+- **[Detailed Workflow Diagram](docs/WORKFLOW_DIAGRAM.md)** - Technical workflow with visual diagrams
+- **[MyBillBook Setup](docs/MYBILLBOOK_SETUP.md)** - How to configure MyBillBook API
+- **[Transform 1 Guide](docs/TRANSFORM1_CONSOLIDATE.md)** - Smart matching and consolidation
+- **[Transform 2 Guide](docs/TRANSFORM2_MYBILLBOOK.md)** - MyBillBook import files
+- **[Transform 3 Guide](docs/TRANSFORM3_WEPRINT.md)** - Label printing export
+
 ## Workflow
 
 ```
