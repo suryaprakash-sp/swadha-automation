@@ -10,6 +10,7 @@ from utils.sheets import SheetsManager
 from transforms.transform1_consolidate import consolidate_inventory
 from transforms.transform2_mybillbook import export_to_mybillbook
 from transforms.transform3_weprint import export_to_weprint
+from mybillbook.sync import sync_to_sheets
 
 
 def print_menu():
@@ -17,6 +18,7 @@ def print_menu():
     print("\n" + "="*50)
     print("SWADHA AUTOMATION - INVENTORY TOOLS")
     print("="*50)
+    print("0. Sync MyBillBook Inventory (Fetch Latest)")
     print("1. Consolidate Inventory (Transform 1)")
     print("2. MyBillBook Data Import (Transform 2)")
     print("3. WePrint Export (Transform 3)")
@@ -37,9 +39,15 @@ def main():
 
         while True:
             print_menu()
-            choice = input("\nEnter your choice (1-5): ").strip()
+            choice = input("\nEnter your choice (0-5): ").strip()
 
-            if choice == '1':
+            if choice == '0':
+                print("\n" + "-"*50)
+                print("Syncing MyBillBook Inventory")
+                print("-"*50)
+                sync_to_sheets(sheets)
+
+            elif choice == '1':
                 print("\n" + "-"*50)
                 print("Running Transform 1: Consolidate Inventory")
                 print("-"*50)
@@ -62,14 +70,18 @@ def main():
                 print("Running All Operations")
                 print("-"*50)
                 try:
+                    print("\nStep 1: Syncing MyBillBook Inventory...")
+                    sync_to_sheets(sheets)
+                    print("\nStep 2: Consolidating Inventory...")
                     consolidate_inventory(sheets)
-                    print()
+                    print("\nStep 3: Generating MyBillBook Import Data...")
                     export_to_mybillbook(sheets)
-                    print()
+                    print("\nStep 4: Generating WePrint Labels...")
                     export_to_weprint(sheets)
                     print("\n" + "="*50)
                     print("[OK] ALL OPERATIONS COMPLETED SUCCESSFULLY!")
                     print("="*50)
+                    print("[OK] MyBillBook inventory synced")
                     print("[OK] Inventory consolidated")
                     print("[OK] MyBillBook data exported")
                     print("[OK] WePrint data exported")
@@ -82,7 +94,7 @@ def main():
                 sys.exit(0)
 
             else:
-                print("\n[ERROR] Invalid choice. Please enter 1-5.")
+                print("\n[ERROR] Invalid choice. Please enter 0-5.")
 
             input("\nPress Enter to continue...")
 

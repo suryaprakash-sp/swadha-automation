@@ -13,15 +13,23 @@ This project automates inventory data transformations for multiple use cases:
 ## Workflow
 
 ```
-Google Sheets (Raw Inventory Data)
+MyBillBook API (Sync Latest Inventory)
     ↓
-Transform 1 (Reference)
+Google Sheets ("MyBillBook Current Inventory")
     ↓
-Transform 2 (MyBillBook - Inventory Management)
+Google Sheets ("Inventory RAW" - Raw Data Entry)
     ↓
-Transform 3 (WePrint - Label Printing)
+Transform 1: Consolidate Inventory
     ↓
-Google Sheets (Output)
+Google Sheets ("Inventory" - Consolidated)
+    ↓
+Transform 2: MyBillBook Data Import
+    ↓
+Google Sheets ("myBillBook add" + "myBillBook update")
+    ↓
+Transform 3: WePrint Export
+    ↓
+Google Sheets ("WePrint" - Label Data)
 ```
 
 ## Quick Start
@@ -64,6 +72,12 @@ python main.py
 ### Menu Options
 
 ```
+0. Sync MyBillBook Inventory (Fetch Latest)
+   - Fetches current inventory from MyBillBook API
+   - Writes to "MyBillBook Current Inventory" sheet
+   - Required before Transform 2 for accurate ADD/UPDATE determination
+   - See: docs/MYBILLBOOK_SETUP.md
+
 1. Consolidate Inventory (Transform 1)
    - Reads from "Inventory RAW" sheet
    - Consolidates duplicate items (by Type, Name, Cost Price, Selling Price)
@@ -73,6 +87,7 @@ python main.py
 
 2. MyBillBook Data Import (Transform 2)
    - Reads from "Inventory RAW" and "Inventory" sheets
+   - Uses "MyBillBook Current Inventory" to determine existing items
    - Creates two sheets: "myBillBook add" and "myBillBook update"
    - ADD: New items to add to MyBillBook
    - UPDATE: Existing items to update in MyBillBook
@@ -83,6 +98,7 @@ python main.py
    - Duplicates rows based on quantity (for printing labels)
 
 4. Run All Operations
+   - Syncs MyBillBook inventory
    - Runs all three transforms in sequence
    - Recommended for complete pipeline execution
 ```
@@ -97,9 +113,15 @@ swadha-automation/
 ├── main.py                             # Main interactive script
 ├── requirements.txt                    # Python dependencies
 ├── README.md                           # This file
-├── SETUP.md                            # Detailed setup instructions
+├── SETUP.md                            # Google Sheets setup instructions
+├── .env.example                        # MyBillBook credentials template
 ├── docs/
-│   └── TRANSFORM1_CONSOLIDATE.md       # Transform 1 documentation
+│   ├── TRANSFORM1_CONSOLIDATE.md       # Transform 1 documentation
+│   └── MYBILLBOOK_SETUP.md             # MyBillBook API setup guide
+├── mybillbook/
+│   ├── api_client.py                   # MyBillBook API client
+│   ├── config.py                       # MyBillBook configuration
+│   └── sync.py                         # Inventory sync functionality
 ├── transforms/
 │   ├── transform1_consolidate.py       # Transform 1: Consolidate Inventory
 │   ├── transform2_mybillbook.py        # Transform 2: MyBillBook export
@@ -110,10 +132,22 @@ swadha-automation/
 
 ## Configuration
 
+### Google Sheets
+
 Edit `config.py` to change:
 - Spreadsheet ID
 - Sheet names
 - OAuth settings
+
+### MyBillBook API (Optional)
+
+For syncing current MyBillBook inventory:
+
+1. Copy `.env.example` to `.env`
+2. Add your MyBillBook credentials
+3. See [docs/MYBILLBOOK_SETUP.md](docs/MYBILLBOOK_SETUP.md) for detailed instructions
+
+**Note**: MyBillBook sync is optional. If not configured, Transform 2 will treat all items as new (ADD).
 
 ## License
 
