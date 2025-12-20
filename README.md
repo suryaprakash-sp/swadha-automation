@@ -15,7 +15,7 @@ This project automates inventory data transformations for multiple use cases:
 ```
 MyBillBook API (Sync Latest Inventory)
     ↓
-Google Sheets ("MyBillBook Current Inventory")
+Google Sheets ("myBillBook Inventory")
     ↓
 Google Sheets ("Inventory RAW" - Raw Data Entry)
     ↓
@@ -74,7 +74,7 @@ python main.py
 ```
 0. Sync MyBillBook Inventory (Fetch Latest)
    - Fetches current inventory from MyBillBook API
-   - Writes to "MyBillBook Current Inventory" sheet
+   - Writes to "myBillBook Inventory" sheet
    - Required before Transform 2 for accurate ADD/UPDATE determination
    - See: docs/MYBILLBOOK_SETUP.md
 
@@ -87,7 +87,7 @@ python main.py
 
 2. MyBillBook Data Import (Transform 2)
    - Reads from "Inventory RAW" and "Inventory" sheets
-   - Uses "MyBillBook Current Inventory" to determine existing items
+   - Uses "myBillBook Inventory" to determine existing items
    - Creates two sheets: "myBillBook add" and "myBillBook update"
    - ADD: New items to add to MyBillBook
    - UPDATE: Existing items to update in MyBillBook

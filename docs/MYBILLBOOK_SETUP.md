@@ -49,15 +49,12 @@ MyBillBook doesn't have a public API, so we use the internal web API that the br
    Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI...
    ```
 
-   **Cookie** (looks like):
-   ```
-   source_landing_url=https://mybillbook.in/; gbuuid=...; _ga=...
-   ```
-
    **Company-Id** (looks like):
    ```
-   123456
+   8fa87fa8-79e4-4a00-951d-7b9c3a41eefa
    ```
+
+   **Note**: Cookies are optional and not required for the API to work.
 
 ### Step 3: Configure Environment Variables
 
@@ -69,9 +66,11 @@ MyBillBook doesn't have a public API, so we use the internal web API that the br
 2. **Edit `.env`** and paste your credentials:
    ```env
    MYBILLBOOK_AUTH_TOKEN=Bearer eyJhbGciOiJIUzI1NiJ9...
-   MYBILLBOOK_COMPANY_ID=123456
-   MYBILLBOOK_COOKIES=source_landing_url=https://mybillbook.in/; gbuuid=...
+   MYBILLBOOK_COMPANY_ID=8fa87fa8-79e4-4a00-951d-7b9c3a41eefa
+   MYBILLBOOK_COOKIES=
    ```
+
+   **Note**: You only need the Authorization token and Company ID. Cookies can be left empty.
 
 3. **Save the file**
 
@@ -117,10 +116,10 @@ Fetched X items from MyBillBook
 
 **Solution**:
 - Make sure `.env` file exists in project root
-- Verify all three credentials are set:
-  - `MYBILLBOOK_AUTH_TOKEN`
-  - `MYBILLBOOK_COMPANY_ID`
-  - `MYBILLBOOK_COOKIES`
+- Verify required credentials are set:
+  - `MYBILLBOOK_AUTH_TOKEN` (required)
+  - `MYBILLBOOK_COMPANY_ID` (required)
+  - `MYBILLBOOK_COOKIES` (optional - can be left empty)
 
 ## What Gets Synced
 
@@ -140,7 +139,7 @@ The sync pulls the following data from MyBillBook:
 | GST % | GST percentage |
 | Description | Item description |
 
-This data is written to the **"MyBillBook Current Inventory"** sheet in Google Sheets.
+This data is written to the **"myBillBook Inventory"** sheet in Google Sheets.
 
 ## Usage in Workflow
 
@@ -172,13 +171,13 @@ python main.py
 ```
 Sync MyBillBook Inventory
    ↓
-   Creates/Updates "MyBillBook Current Inventory" sheet
+   Creates/Updates "myBillBook Inventory" sheet
    ↓
 Transform 1: Consolidate Inventory RAW
    ↓
 Transform 2: MyBillBook Import (uses synced data)
    ↓
-   Checks if items exist in "MyBillBook Current Inventory"
+   Checks if items exist in "myBillBook Inventory"
    ↓
    Existing → "myBillBook update"
    New → "myBillBook add"
