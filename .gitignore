@@ -51,6 +51,7 @@ yarn.lock
 *.swo
 *~
 .DS_Store
+.claude/
 
 # Logs
 *.log

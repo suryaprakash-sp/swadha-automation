@@ -69,6 +69,7 @@ python main.py
    - Consolidates duplicate items (by Type, Name, Cost Price, Selling Price)
    - Generates item names and barcodes
    - Writes to "Inventory" sheet
+   - See: docs/TRANSFORM1_CONSOLIDATE.md
 
 2. MyBillBook Data Import (Transform 2)
    - Reads from "Inventory RAW" and "Inventory" sheets
@@ -97,6 +98,8 @@ swadha-automation/
 ├── requirements.txt                    # Python dependencies
 ├── README.md                           # This file
 ├── SETUP.md                            # Detailed setup instructions
+├── docs/
+│   └── TRANSFORM1_CONSOLIDATE.md       # Transform 1 documentation
 ├── transforms/
 │   ├── transform1_consolidate.py       # Transform 1: Consolidate Inventory
 │   ├── transform2_mybillbook.py        # Transform 2: MyBillBook export
