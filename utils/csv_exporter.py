@@ -19,7 +19,8 @@ EXPORT_FOLDERS = {
     "mybillbook_inventory": "mybillbook_inventory",
     "mybillbook_add": "mybillbook_add",
     "mybillbook_update": "mybillbook_update",
-    "weprint": "weprint"
+    "weprint": "weprint",
+    "mybillbook_inventory_BACKUP": "mybillbook_inventory_BACKUP"  # Safety backups
 }
 
 
@@ -127,6 +128,47 @@ def export_sheet_data(sheets_manager, sheet_name, export_type, prompt_user=True)
 
     except Exception as e:
         print(f"[ERROR] Error exporting sheet '{sheet_name}': {e}")
+        return None
+
+
+def create_safety_backup(sheets_manager, sheet_name, backup_type="mybillbook_inventory_BACKUP"):
+    """
+    Create a SAFETY BACKUP before clearing data (automatic, no prompt)
+
+    This is different from regular exports - it's a full safety backup
+    created automatically before destructive operations.
+
+    Args:
+        sheets_manager: GoogleSheetsManager instance
+        sheet_name: Name of the sheet to backup
+        backup_type: Type of backup (default: mybillbook_inventory_BACKUP)
+
+    Returns:
+        str: Path to saved backup file, or None if failed/no data
+    """
+    try:
+        # Read data from sheet
+        data = sheets_manager.read_sheet(sheet_name)
+
+        if not data or len(data) <= 1:  # Only headers or empty
+            print(f"   [INFO] No data to backup in '{sheet_name}' (sheet is empty)")
+            return None
+
+        print(f"\n{'='*60}")
+        print(f"[SAFETY BACKUP] Creating backup before clearing '{sheet_name}'")
+        print(f"{'='*60}")
+
+        # Save without prompting
+        filepath = save_to_csv(data, backup_type, prompt_user=False)
+
+        if filepath:
+            print(f"[OK] Safety backup created: {filepath}")
+            print(f"{'='*60}\n")
+
+        return filepath
+
+    except Exception as e:
+        print(f"[ERROR] Error creating safety backup: {e}")
         return None
 
 

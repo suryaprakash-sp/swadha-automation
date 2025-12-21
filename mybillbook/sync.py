@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 from mybillbook.api_client import MyBillBookAPI
 from mybillbook.config import has_credentials
 from config import SHEET_MYBILLBOOK_CURRENT
-from utils.csv_exporter import export_sheet_data
+from utils.csv_exporter import export_sheet_data, create_safety_backup
 
 
 SYNC_SHEET_NAME = SHEET_MYBILLBOOK_CURRENT
@@ -131,6 +131,9 @@ def sync_to_sheets(sheets_manager):
         rows.append(row)
 
     output = [headers] + rows
+
+    # Create SAFETY BACKUP before clearing (automatic, no prompt)
+    create_safety_backup(sheets_manager, SYNC_SHEET_NAME, "mybillbook_inventory_BACKUP")
 
     # Write to Google Sheets
     print(f"\nWriting {len(rows)} items to Google Sheets...")

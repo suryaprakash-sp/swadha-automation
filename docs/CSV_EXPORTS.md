@@ -26,12 +26,13 @@ All CSV exports are saved in the `csv_exports/` directory with the following str
 
 ```
 csv_exports/
-├── inventory_raw/          # Raw input data (before consolidation)
-├── inventory/              # Consolidated inventory (Transform 1 output)
-├── mybillbook_inventory/   # MyBillBook sync data (all existing items)
-├── mybillbook_add/         # New items to add to MyBillBook (Transform 2)
-├── mybillbook_update/      # Existing items to update (Transform 2)
-└── weprint/                # Label printing data (Transform 3)
+├── inventory_raw/                    # Raw input data (before consolidation)
+├── inventory/                        # Consolidated inventory (Transform 1 output)
+├── mybillbook_inventory/             # MyBillBook sync data (all existing items)
+├── mybillbook_inventory_BACKUP/      # ⚠️ SAFETY BACKUPS (automatic before clearing)
+├── mybillbook_add/                   # New items to add to MyBillBook (Transform 2)
+├── mybillbook_update/                # Existing items to update (Transform 2)
+└── weprint/                          # Label printing data (Transform 3)
 ```
 
 ## File Naming Convention
@@ -116,12 +117,75 @@ Files are automatically named with timestamps:
 - Print labels for your inventory
 - Manual label creation
 
+## ⚠️ Safety Backups (AUTOMATIC)
+
+### What are Safety Backups?
+
+Safety backups are **automatic, full backups** created BEFORE any destructive operation (like clearing a sheet). They are different from regular exports:
+
+| Regular Exports | Safety Backups |
+|----------------|----------------|
+| User prompted (y/n) | **Automatic (no prompt)** |
+| Created AFTER transformation | Created **BEFORE clearing data** |
+| Optional | **Mandatory** (if data exists) |
+| Regular naming | **_BACKUP suffix** in name |
+
+### When are Safety Backups Created?
+
+**MyBillBook Sync (Menu Option 0):**
+```
+1. Read existing data from "myBillBook Inventory" sheet
+2. If sheet has data → Create SAFETY BACKUP automatically
+3. Clear the sheet
+4. Write new sync data
+5. Prompt for regular export (optional)
+```
+
+**Example output:**
+```
+============================================================
+[SAFETY BACKUP] Creating backup before clearing 'myBillBook Inventory'
+============================================================
+[OK] Export folders created at: C:\swadha-automation\csv_exports
+   [OK] Saved: csv_exports\mybillbook_inventory_BACKUP\mybillbook_inventory_BACKUP_20251221_150530.csv
+[OK] Safety backup created: csv_exports\mybillbook_inventory_BACKUP\mybillbook_inventory_BACKUP_20251221_150530.csv
+============================================================
+```
+
+### Why Safety Backups?
+
+1. **Prevents data loss** - If sync fails or gets bad data, you have a backup
+2. **Audit trail** - Track what was in MyBillBook before each sync
+3. **Recovery** - Can restore previous state if needed
+4. **Peace of mind** - Always have a copy before clearing
+
+### Safety Backup Files
+
+Files are saved in: `csv_exports/mybillbook_inventory_BACKUP/`
+
+Naming format: `mybillbook_inventory_BACKUP_YYYYMMDD_HHMMSS.csv`
+
+**Example:**
+```
+mybillbook_inventory_BACKUP_20251221_150530.csv
+mybillbook_inventory_BACKUP_20251221_160245.csv
+mybillbook_inventory_BACKUP_20251221_173019.csv
+```
+
+### Important Notes
+
+1. **No prompt** - Safety backups are created automatically, you cannot skip them
+2. **Only if data exists** - If the sheet is empty, no backup is created
+3. **Keep important backups** - These are your safety net, don't delete them carelessly
+4. **Separate from regular exports** - Safety backups and regular exports are stored in different folders
+
 ## Example Workflow
 
 ```
 Step 0: Sync MyBillBook
+   -> [SAFETY BACKUP] mybillbook_inventory_BACKUP_20251221_140000.csv (AUTOMATIC)
    -> [EXPORT] mybillbook_inventory (Save? y/n)
-   -> Creates: mybillbook_inventory_20251221_140000.csv
+   -> Creates: mybillbook_inventory_20251221_140001.csv
 
 Step 1: Transform 1 (Consolidation)
    -> [EXPORT] inventory_raw (Save? y/n)
