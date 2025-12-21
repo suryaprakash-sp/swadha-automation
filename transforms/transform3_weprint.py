@@ -1,4 +1,5 @@
 from config import SHEET_INVENTORY, SHEET_WEPRINT
+from utils.csv_exporter import export_sheet_data
 
 
 def export_to_weprint(sheets_manager):
@@ -53,3 +54,8 @@ def export_to_weprint(sheets_manager):
         sheets_manager.format_as_text(SHEET_WEPRINT, f"B2:B{len(output)}")
 
     print(f"[OK] WePrint data exported successfully! {total_labels} labels generated")
+
+    # Export to CSV if user wants
+    print("\n" + "="*60)
+    export_sheet_data(sheets_manager, SHEET_WEPRINT, "weprint", prompt_user=True)
+    print("="*60)

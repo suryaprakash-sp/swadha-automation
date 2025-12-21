@@ -1,0 +1,160 @@
+"""
+CSV Export Utility
+Handles exporting Google Sheets data to CSV files with timestamps
+"""
+
+import os
+import csv
+from datetime import datetime
+from pathlib import Path
+
+
+# Base export directory
+EXPORT_BASE_DIR = "csv_exports"
+
+# Subdirectories for each export type
+EXPORT_FOLDERS = {
+    "inventory_raw": "inventory_raw",
+    "inventory": "inventory",
+    "mybillbook_inventory": "mybillbook_inventory",
+    "mybillbook_add": "mybillbook_add",
+    "mybillbook_update": "mybillbook_update",
+    "weprint": "weprint"
+}
+
+
+def create_export_folders():
+    """Create the export folder structure if it doesn't exist"""
+    base_path = Path(EXPORT_BASE_DIR)
+    base_path.mkdir(exist_ok=True)
+
+    for folder_name in EXPORT_FOLDERS.values():
+        folder_path = base_path / folder_name
+        folder_path.mkdir(exist_ok=True)
+
+    print(f"[OK] Export folders created at: {base_path.absolute()}")
+
+
+def generate_filename(export_type):
+    """
+    Generate a timestamped filename for CSV export
+
+    Args:
+        export_type: One of the keys in EXPORT_FOLDERS
+
+    Returns:
+        Full file path with timestamp
+    """
+    if export_type not in EXPORT_FOLDERS:
+        raise ValueError(f"Invalid export type: {export_type}. Must be one of {list(EXPORT_FOLDERS.keys())}")
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{export_type}_{timestamp}.csv"
+
+    folder = EXPORT_FOLDERS[export_type]
+    filepath = Path(EXPORT_BASE_DIR) / folder / filename
+
+    return filepath
+
+
+def save_to_csv(data, export_type, prompt_user=True):
+    """
+    Save data to CSV file with timestamp
+
+    Args:
+        data: List of lists (rows) to save
+        export_type: One of the keys in EXPORT_FOLDERS
+        prompt_user: Whether to prompt user before saving (default: True)
+
+    Returns:
+        str: Path to saved file, or None if user declined
+    """
+    if not data:
+        print(f"[WARN] No data to export for {export_type}")
+        return None
+
+    # Create folders if they don't exist
+    create_export_folders()
+
+    # Prompt user if required
+    if prompt_user:
+        print(f"\n[EXPORT] {export_type}")
+        response = input("   Save as CSV? (y/n): ").strip().lower()
+        if response != 'y':
+            print("   Skipped.")
+            return None
+
+    # Generate filename
+    filepath = generate_filename(export_type)
+
+    # Save to CSV
+    try:
+        with open(filepath, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerows(data)
+
+        print(f"   [OK] Saved: {filepath}")
+        return str(filepath)
+
+    except Exception as e:
+        print(f"   [ERROR] Error saving CSV: {e}")
+        return None
+
+
+def export_sheet_data(sheets_manager, sheet_name, export_type, prompt_user=True):
+    """
+    Export Google Sheets data directly to CSV
+
+    Args:
+        sheets_manager: GoogleSheetsManager instance
+        sheet_name: Name of the sheet to export
+        export_type: One of the keys in EXPORT_FOLDERS
+        prompt_user: Whether to prompt user before saving
+
+    Returns:
+        str: Path to saved file, or None if failed/declined
+    """
+    try:
+        # Read data from sheet
+        data = sheets_manager.read_sheet(sheet_name)
+
+        if not data:
+            print(f"[WARN] Sheet '{sheet_name}' is empty")
+            return None
+
+        # Save to CSV
+        return save_to_csv(data, export_type, prompt_user)
+
+    except Exception as e:
+        print(f"[ERROR] Error exporting sheet '{sheet_name}': {e}")
+        return None
+
+
+def list_exports(export_type=None):
+    """
+    List all exported CSV files
+
+    Args:
+        export_type: Optional filter by export type
+
+    Returns:
+        List of file paths
+    """
+    base_path = Path(EXPORT_BASE_DIR)
+
+    if not base_path.exists():
+        return []
+
+    if export_type:
+        if export_type not in EXPORT_FOLDERS:
+            raise ValueError(f"Invalid export type: {export_type}")
+        folder = base_path / EXPORT_FOLDERS[export_type]
+        return sorted(folder.glob("*.csv"), reverse=True)
+    else:
+        # List all CSVs across all folders
+        all_files = []
+        for folder_name in EXPORT_FOLDERS.values():
+            folder = base_path / folder_name
+            if folder.exists():
+                all_files.extend(folder.glob("*.csv"))
+        return sorted(all_files, reverse=True)

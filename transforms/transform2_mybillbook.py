@@ -1,4 +1,5 @@
 from config import SHEET_RAW, SHEET_INVENTORY, SHEET_MYBILLBOOK_ADD, SHEET_MYBILLBOOK_UPDATE, SHEET_MYBILLBOOK_CURRENT
+from utils.csv_exporter import export_sheet_data
 
 
 def safe_float(value):
@@ -160,3 +161,9 @@ def export_to_mybillbook(sheets_manager):
     print(f"  ADD sheet: {add_count} items (new items not in MyBillBook)")
     print(f"  UPDATE sheet: {update_count} items (existing items in MyBillBook)")
     print(f"  Total processed: {len(inventory_rows)} items")
+
+    # Export to CSV if user wants
+    print("\n" + "="*60)
+    export_sheet_data(sheets_manager, SHEET_MYBILLBOOK_ADD, "mybillbook_add", prompt_user=True)
+    export_sheet_data(sheets_manager, SHEET_MYBILLBOOK_UPDATE, "mybillbook_update", prompt_user=True)
+    print("="*60)

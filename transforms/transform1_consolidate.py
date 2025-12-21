@@ -2,6 +2,7 @@ import random
 import string
 import re
 from config import SHEET_RAW, SHEET_INVENTORY, SHEET_MYBILLBOOK_CURRENT
+from utils.csv_exporter import export_sheet_data
 
 
 def generate_name(category):
@@ -291,3 +292,9 @@ def consolidate_inventory(sheets_manager):
         sheets_manager.format_as_number(SHEET_INVENTORY, f"G2:G{last_row}", decimal_places=2)  # Total SP
 
     print(f"[OK] Inventory consolidated successfully! {len(output_rows)} items processed")
+
+    # Export to CSV if user wants
+    print("\n" + "="*60)
+    export_sheet_data(sheets_manager, SHEET_RAW, "inventory_raw", prompt_user=True)
+    export_sheet_data(sheets_manager, SHEET_INVENTORY, "inventory", prompt_user=True)
+    print("="*60)

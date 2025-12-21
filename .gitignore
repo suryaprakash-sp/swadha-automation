@@ -61,6 +61,7 @@ logs/
 # Output files
 output/
 exports/
+csv_exports/
 *.xlsx
 *.csv
 *.xls

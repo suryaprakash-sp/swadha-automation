@@ -14,6 +14,7 @@ This project automates inventory data transformations for multiple use cases:
 
 - **[Simple Workflow Guide](docs/SIMPLE_WORKFLOW.md)** - Easy-to-understand guide for everyone (recommended for first-time users!)
 - **[Detailed Workflow Diagram](docs/WORKFLOW_DIAGRAM.md)** - Technical workflow with visual diagrams
+- **[CSV Exports Guide](docs/CSV_EXPORTS.md)** - How to save timestamped backups of your data
 - **[MyBillBook Setup](docs/MYBILLBOOK_SETUP.md)** - How to configure MyBillBook API
 - **[Transform 1 Guide](docs/TRANSFORM1_CONSOLIDATE.md)** - Smart matching and consolidation
 - **[Transform 2 Guide](docs/TRANSFORM2_MYBILLBOOK.md)** - MyBillBook import files

@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 from mybillbook.api_client import MyBillBookAPI
 from mybillbook.config import has_credentials
 from config import SHEET_MYBILLBOOK_CURRENT
+from utils.csv_exporter import export_sheet_data
 
 
 SYNC_SHEET_NAME = SHEET_MYBILLBOOK_CURRENT
@@ -171,6 +172,10 @@ def sync_to_sheets(sheets_manager):
         sheets_manager.format_as_number(SYNC_SHEET_NAME, f"L2:L{last_row}", decimal_places=0)  # Minimum Quantity
 
     print(f"\n[OK] Successfully synced {len(rows)} items to '{SYNC_SHEET_NAME}' sheet!")
+
+    # Export to CSV if user wants
+    print("\n" + "="*60)
+    export_sheet_data(sheets_manager, SYNC_SHEET_NAME, "mybillbook_inventory", prompt_user=True)
     print("="*60 + "\n")
 
     return True
