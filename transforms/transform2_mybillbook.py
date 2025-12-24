@@ -16,6 +16,21 @@ def safe_float(value):
         return 0.0
 
 
+def safe_int(value):
+    """
+    Safely convert a value to int, handling comma-separated thousands
+    e.g., "6,000" -> 6000
+    This ensures MyBillBook bulk upload gets correct quantities (not "6,000" which uploads as 6)
+    """
+    if not value:
+        return 0
+    try:
+        # Remove commas and convert to int
+        return int(float(str(value).replace(',', '')))
+    except (ValueError, AttributeError):
+        return 0
+
+
 def export_to_mybillbook(sheets_manager):
     """
     Export data to MyBillBook format (ADD and UPDATE sheets)
@@ -110,7 +125,7 @@ def export_to_mybillbook(sheets_manager):
                 inv_row[2],           # Purchase Price (Column C)
                 "Inclusive",          # Purchase Tax inclusive
                 inv_row[4],           # MRP (same as Sales Price)
-                inv_row[3],           # Current stock (just use new quantity)
+                safe_int(inv_row[3]), # Current stock (convert to int, remove commas)
                 0,                    # Low stock alert quantity
                 "No"                  # Visible on Online Store?
             ])
@@ -134,7 +149,7 @@ def export_to_mybillbook(sheets_manager):
                 inv_row[2],           # Purchase Price
                 "Inclusive",          # Purchase Tax inclusive
                 inv_row[4],           # MRP
-                inv_row[3],           # Current stock
+                safe_int(inv_row[3]), # Current stock (convert to int, remove commas)
                 0,                    # Low stock alert quantity
                 "Product",            # Item type
                 "No"                  # Visible on Online Store?
@@ -145,17 +160,33 @@ def export_to_mybillbook(sheets_manager):
     sheets_manager.clear_sheet(SHEET_MYBILLBOOK_ADD)
     sheets_manager.write_sheet(SHEET_MYBILLBOOK_ADD, output_add)
 
-    # Format Item code column (G) as plain text in ADD sheet
+    # Format ADD sheet columns
     if len(output_add) > 1:
+        # Format Item code column (G) as plain text
         sheets_manager.format_as_text(SHEET_MYBILLBOOK_ADD, f"G2:G{len(output_add)}")
+        # Format Sales Price (J), Purchase Price (L), MRP (N) with 2 decimals
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_ADD, f"J2:J{len(output_add)}", decimal_places=2)
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_ADD, f"L2:L{len(output_add)}", decimal_places=2)
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_ADD, f"N2:N{len(output_add)}", decimal_places=2)
+        # Format Current stock (O) and Low stock alert (P) as integers (no decimals, no commas)
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_ADD, f"O2:O{len(output_add)}", decimal_places=0)
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_ADD, f"P2:P{len(output_add)}", decimal_places=0)
 
     # Write to UPDATE sheet
     sheets_manager.clear_sheet(SHEET_MYBILLBOOK_UPDATE)
     sheets_manager.write_sheet(SHEET_MYBILLBOOK_UPDATE, output_update)
 
-    # Format Item code column (D) as plain text in UPDATE sheet
+    # Format UPDATE sheet columns
     if len(output_update) > 1:
+        # Format Item code column (D) as plain text
         sheets_manager.format_as_text(SHEET_MYBILLBOOK_UPDATE, f"D2:D{len(output_update)}")
+        # Format Sales Price (G), Purchase Price (I), MRP (K) with 2 decimals
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_UPDATE, f"G2:G{len(output_update)}", decimal_places=2)
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_UPDATE, f"I2:I{len(output_update)}", decimal_places=2)
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_UPDATE, f"K2:K{len(output_update)}", decimal_places=2)
+        # Format Current stock (L) and Low stock alert (M) as integers (no decimals, no commas)
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_UPDATE, f"L2:L{len(output_update)}", decimal_places=0)
+        sheets_manager.format_as_number(SHEET_MYBILLBOOK_UPDATE, f"M2:M{len(output_update)}", decimal_places=0)
 
     print(f"\n[OK] MyBillBook data exported successfully!")
     print(f"  ADD sheet: {add_count} items (new items not in MyBillBook)")

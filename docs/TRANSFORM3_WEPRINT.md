@@ -55,9 +55,26 @@ Ear Rings HXXL        24 0118      250.00
 
 Reads all consolidated inventory items (71 items)
 
-### 2. Generate Label Rows
+### 2. Filter Items
 
-For each inventory item:
+Skip items where the product name starts with "Charms 40" (bulk items that don't need individual labels)
+
+**Why?** Some products have very high quantities (1000+) and don't need individual labels printed.
+
+**Example:**
+```
+Product: Charms 40 XYZ, Quantity: 1000
+  ↓
+SKIPPED (would generate 1000 labels - not practical)
+
+Product: Ear Rings XCNR, Quantity: 4
+  ↓
+PROCESSED (generates 4 labels)
+```
+
+### 3. Generate Label Rows
+
+For each inventory item (that's not skipped):
 
 ```python
 quantity = Column D (Quantity)
@@ -126,10 +143,13 @@ python main.py
 ```
 Starting WePrint export...
 Processing 71 inventory items...
+  SKIPPED: Charms 40 Silver ABC (Charms 40 - bulk item, quantity: 1000)
+  SKIPPED: Charms 40 Gold XYZ (Charms 40 - bulk item, quantity: 500)
 Sheet WePrint cleared
 900 cells updated in WePrint
 Formatted B2:B300 in WePrint as text
-[OK] WePrint data exported successfully! 299 labels generated
+[OK] WePrint data exported successfully! 297 labels generated
+     2 items skipped (Charms 40 bulk items)
 ```
 
 ## Printing Labels with WePrint
@@ -249,9 +269,10 @@ Both formats are compatible with standard barcode printers and WePrint software.
 
 ## Notes
 
-- **All 71 inventory items are processed** regardless of "Already Present" status
+- **Items starting with "Charms 40" are skipped** to avoid generating thousands of labels
+- All other inventory items are processed regardless of "Already Present" status
 - Each label row represents ONE physical label to print
-- Total label count = sum of all quantities
+- Total label count = sum of quantities (excluding skipped items)
 - Barcode column formatted as TEXT to prevent Excel removing leading zeros or spaces
 - Uses Column J (Inventory Item Barcode) for the actual barcode to print
 - Matched items print with MyBillBook SKU for consistency

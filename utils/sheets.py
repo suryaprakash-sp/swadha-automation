@@ -250,6 +250,16 @@ class SheetsManager:
         except HttpError as error:
             print(f"An error occurred: {error}")
 
+    def format_as_number_2decimals(self, sheet_name, range_notation):
+        """
+        Format cells as numbers with 2 decimal places (convenience method)
+
+        Args:
+            sheet_name: Name of the sheet tab
+            range_notation: Range to format (e.g., 'C2:C100')
+        """
+        self.format_as_number(sheet_name, range_notation, decimal_places=2)
+
     def format_as_number(self, sheet_name, range_notation, decimal_places=0):
         """
         Format cells as numbers with specified decimal places

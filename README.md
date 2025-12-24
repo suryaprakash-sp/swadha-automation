@@ -6,9 +6,11 @@ Data cleaning and transformation pipeline for inventory management using Google 
 
 This project automates inventory data transformations for multiple use cases:
 
-1. **Transform 1**: Reference transformation (internal use)
+1. **Transform 1**: Consolidate inventory with smart matching
 2. **Transform 2**: MyBillBook format (inventory management)
-3. **Transform 3**: WePrint format (label printing)
+
+**Standalone Tools:**
+- **Label Generator** (`generate_labels.py`): Generate WePrint labels from MyBillBook inventory
 
 ## 📖 Documentation
 
@@ -18,9 +20,10 @@ This project automates inventory data transformations for multiple use cases:
 - **[MyBillBook Setup](docs/MYBILLBOOK_SETUP.md)** - How to configure MyBillBook API
 - **[Transform 1 Guide](docs/TRANSFORM1_CONSOLIDATE.md)** - Smart matching and consolidation
 - **[Transform 2 Guide](docs/TRANSFORM2_MYBILLBOOK.md)** - MyBillBook import files
-- **[Transform 3 Guide](docs/TRANSFORM3_WEPRINT.md)** - Label printing export
 
 ## Workflow
+
+### Main Pipeline
 
 ```
 Step 0: MyBillBook API Sync
@@ -44,12 +47,23 @@ Step 2: Transform 2 - MyBillBook Import
     ↓
 Google Sheets ("myBillBook add" + "myBillBook update")
     ↓
-Step 3: Transform 3 - WePrint Labels
-    ├─ Reads all 71 items
-    ├─ Uses Column J (Inventory Item Barcode)
-    └─ Duplicates by quantity
+✅ Import to MyBillBook
+```
+
+### Standalone Label Generator
+
+```
+Run: python generate_labels.py
+
+Reads: MyBillBook Inventory (synced data)
     ↓
-Google Sheets ("WePrint" - 299 label rows)
+Select items for labels (by number, search, or all)
+    ↓
+Enter label count for each item
+    ↓
+Generates: WePrint sheet with label rows
+    ↓
+Export to CSV → Print labels
 ```
 
 ## Quick Start

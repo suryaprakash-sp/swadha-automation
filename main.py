@@ -9,7 +9,6 @@ import sys
 from utils.sheets import SheetsManager
 from transforms.transform1_consolidate import consolidate_inventory
 from transforms.transform2_mybillbook import export_to_mybillbook
-from transforms.transform3_weprint import export_to_weprint
 from mybillbook.sync import sync_to_sheets
 
 
@@ -21,9 +20,8 @@ def print_menu():
     print("0. Sync MyBillBook Inventory (Fetch Latest)")
     print("1. Consolidate Inventory (Transform 1)")
     print("2. MyBillBook Data Import (Transform 2)")
-    print("3. WePrint Export (Transform 3)")
-    print("4. Run All Operations")
-    print("5. Exit")
+    print("3. Run All Operations")
+    print("4. Exit")
     print("="*50)
 
 
@@ -39,7 +37,7 @@ def main():
 
         while True:
             print_menu()
-            choice = input("\nEnter your choice (0-5): ").strip()
+            choice = input("\nEnter your choice (0-4): ").strip()
 
             if choice == '0':
                 print("\n" + "-"*50)
@@ -61,12 +59,6 @@ def main():
 
             elif choice == '3':
                 print("\n" + "-"*50)
-                print("Running Transform 3: WePrint Export")
-                print("-"*50)
-                export_to_weprint(sheets)
-
-            elif choice == '4':
-                print("\n" + "-"*50)
                 print("Running All Operations")
                 print("-"*50)
                 try:
@@ -76,25 +68,22 @@ def main():
                     consolidate_inventory(sheets)
                     print("\nStep 3: Generating MyBillBook Import Data...")
                     export_to_mybillbook(sheets)
-                    print("\nStep 4: Generating WePrint Labels...")
-                    export_to_weprint(sheets)
                     print("\n" + "="*50)
                     print("[OK] ALL OPERATIONS COMPLETED SUCCESSFULLY!")
                     print("="*50)
                     print("[OK] MyBillBook inventory synced")
                     print("[OK] Inventory consolidated")
                     print("[OK] MyBillBook data exported")
-                    print("[OK] WePrint data exported")
                     print("="*50)
                 except Exception as e:
                     print(f"\n[ERROR] Error during operations: {str(e)}")
 
-            elif choice == '5':
+            elif choice == '4':
                 print("\nExiting... Goodbye!")
                 sys.exit(0)
 
             else:
-                print("\n[ERROR] Invalid choice. Please enter 0-5.")
+                print("\n[ERROR] Invalid choice. Please enter 0-4.")
 
             input("\nPress Enter to continue...")
 

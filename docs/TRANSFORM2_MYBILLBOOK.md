@@ -141,9 +141,13 @@ else:
 
 ### 5. Column Formatting
 
-**Both sheets**:
-- Item code column formatted as TEXT to preserve barcode format
-- All other columns use default formatting
+**ADD sheet**:
+- Item code column (G) formatted as TEXT to preserve barcode format
+- Sales Price (J), Purchase Price (L), MRP (N) formatted as number with 2 decimals
+
+**UPDATE sheet**:
+- Item code column (D) formatted as TEXT to preserve barcode format
+- Sales Price (G), Purchase Price (I), MRP (K) formatted as number with 2 decimals
 
 ## Usage
 
