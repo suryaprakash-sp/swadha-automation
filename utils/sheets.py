@@ -34,7 +34,7 @@ class SheetsManager:
 
     def read_sheet(self, sheet_name, range_notation=None):
         """
-        Read data from a Google Sheet
+        Read data from a Google Sheet with retry logic for transient errors
 
         Args:
             sheet_name: Name of the sheet tab
@@ -43,22 +43,43 @@ class SheetsManager:
         Returns:
             List of lists containing the sheet data
         """
-        try:
-            if range_notation:
-                range_name = f"{sheet_name}!{range_notation}"
-            else:
-                range_name = sheet_name
+        import time
+        import http.client
 
-            result = self.service.spreadsheets().values().get(
-                spreadsheetId=self.spreadsheet_id,
-                range=range_name
-            ).execute()
+        max_retries = 3
+        retry_delay = 1  # seconds
 
-            return result.get('values', [])
+        for attempt in range(max_retries):
+            try:
+                if range_notation:
+                    range_name = f"{sheet_name}!{range_notation}"
+                else:
+                    range_name = sheet_name
 
-        except HttpError as error:
-            print(f"An error occurred: {error}")
-            return []
+                result = self.service.spreadsheets().values().get(
+                    spreadsheetId=self.spreadsheet_id,
+                    range=range_name
+                ).execute()
+
+                return result.get('values', [])
+
+            except (http.client.IncompleteRead, ConnectionError, TimeoutError) as e:
+                # Transient network errors - retry
+                if attempt < max_retries - 1:
+                    print(f"[WARN] Network error on attempt {attempt + 1}/{max_retries}: {type(e).__name__}")
+                    print(f"   Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                    continue
+                else:
+                    print(f"[ERROR] Failed to read sheet after {max_retries} attempts: {e}")
+                    return []
+
+            except HttpError as error:
+                print(f"An error occurred: {error}")
+                return []
+
+        return []
 
     def write_sheet(self, sheet_name, data, start_cell='A1', value_input_option='USER_ENTERED'):
         """

@@ -362,7 +362,11 @@ def label_generator_page():
 
                 label_counts = {}
 
-                for idx, row in filtered_df.iterrows():
+                # Reset index to ensure sequential indexing
+                filtered_df_reset = filtered_df.reset_index(drop=True)
+
+                for idx in range(len(filtered_df_reset)):
+                    row = filtered_df_reset.iloc[idx]
                     name = row.get('Name', '')
                     sku = row.get('SKU Code', '')
                     current_qty = row.get('Quantity', 0)
@@ -377,7 +381,7 @@ def label_generator_page():
                             min_value=0,
                             value=0,
                             step=1,
-                            key=f"label_count_{idx}",
+                            key=f"label_count_{idx}_{sku}",  # More unique key
                             label_visibility="collapsed"
                         )
                         label_counts[idx] = count
@@ -390,7 +394,7 @@ def label_generator_page():
 
                         for idx, count in label_counts.items():
                             if count > 0:
-                                row = filtered_df.iloc[idx]
+                                row = filtered_df_reset.iloc[idx]
                                 name = row.get('Name', '')
                                 sku = row.get('SKU Code', '')
                                 price = row.get('Selling Price', '')
@@ -429,6 +433,10 @@ def csv_exports_page():
     st.markdown("---")
 
     st.info("📌 View and download your timestamped CSV exports")
+
+    # Initialize preview state
+    if 'preview_file' not in st.session_state:
+        st.session_state.preview_file = None
 
     # Export type selector
     export_type = st.selectbox(
@@ -471,13 +479,10 @@ def csv_exports_page():
                         st.caption(f"Size: {file_size:,} bytes | Modified: {mod_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
                     with col2:
-                        # Preview button
-                        if st.button("👁️ Preview", key=f"preview_{file_path}"):
-                            try:
-                                df = pd.read_csv(file_path)
-                                st.dataframe(df.head(20), use_container_width=True)
-                            except Exception as e:
-                                st.error(f"Error reading file: {str(e)}")
+                        # Preview button - use unique string key
+                        file_key = str(file_path).replace('\\', '_').replace('/', '_')
+                        if st.button("👁️ Preview", key=f"preview_{file_key}"):
+                            st.session_state.preview_file = str(file_path)
 
                     with col3:
                         # Download button
@@ -487,8 +492,22 @@ def csv_exports_page():
                                 data=f,
                                 file_name=file_path.name,
                                 mime="text/csv",
-                                key=f"download_{file_path}"
+                                key=f"download_{file_key}"
                             )
+
+                    # Show preview if this file is selected
+                    if st.session_state.preview_file == str(file_path):
+                        try:
+                            df = pd.read_csv(file_path)
+                            st.dataframe(df.head(20), use_container_width=True)
+                            if st.button("✖️ Close Preview", key=f"close_{file_key}"):
+                                st.session_state.preview_file = None
+                                st.rerun()
+                        except Exception as e:
+                            st.error(f"Error reading file: {str(e)}")
+                            if st.button("✖️ Close", key=f"close_err_{file_key}"):
+                                st.session_state.preview_file = None
+                                st.rerun()
 
     except Exception as e:
         st.error(f"❌ Error listing exports: {str(e)}")
