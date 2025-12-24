@@ -151,30 +151,58 @@ def create_safety_backup(sheets_manager, sheet_name, backup_type="mybillbook_inv
     Returns:
         str: Path to saved backup file, or None if failed/no data
     """
-    try:
-        # Read data from sheet
-        data = sheets_manager.read_sheet(sheet_name)
+    import time
 
-        if not data or len(data) <= 1:  # Only headers or empty
-            print(f"   [INFO] No data to backup in '{sheet_name}' (sheet is empty)")
-            return None
+    # Retry logic for transient network/SSL errors
+    max_retries = 3
+    retry_delay = 1  # seconds
 
-        print(f"\n{'='*60}")
-        print(f"[SAFETY BACKUP] Creating backup before clearing '{sheet_name}'")
-        print(f"{'='*60}")
+    for attempt in range(max_retries):
+        try:
+            # Read data from sheet
+            data = sheets_manager.read_sheet(sheet_name)
 
-        # Save without prompting
-        filepath = save_to_csv(data, backup_type, prompt_user=False)
+            if not data or len(data) <= 1:  # Only headers or empty
+                print(f"   [INFO] No data to backup in '{sheet_name}' (sheet is empty)")
+                return None
 
-        if filepath:
-            print(f"[OK] Safety backup created: {filepath}")
-            print(f"{'='*60}\n")
+            print(f"\n{'='*60}")
+            print(f"[SAFETY BACKUP] Creating backup before clearing '{sheet_name}'")
+            print(f"{'='*60}")
 
-        return filepath
+            # Save without prompting
+            filepath = save_to_csv(data, backup_type, prompt_user=False)
 
-    except Exception as e:
-        print(f"[ERROR] Error creating safety backup: {e}")
-        return None
+            if filepath:
+                print(f"[OK] Safety backup created: {filepath}")
+                print(f"{'='*60}\n")
+
+            return filepath
+
+        except Exception as e:
+            error_msg = str(e)
+
+            # Check if it's a transient SSL or network error
+            is_transient = any(err in error_msg.lower() for err in [
+                'ssl', 'connection', 'timeout', 'network', 'wrong_version_number'
+            ])
+
+            if is_transient and attempt < max_retries - 1:
+                print(f"[WARN] Transient error on attempt {attempt + 1}/{max_retries}: {error_msg}")
+                print(f"   Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+                continue
+            else:
+                # Final attempt failed or non-transient error
+                print(f"\n{'='*60}")
+                print(f"[ERROR] Safety backup failed after {attempt + 1} attempts")
+                print(f"Error: {error_msg}")
+                print(f"[WARN] Proceeding WITHOUT backup - data will be cleared!")
+                print(f"{'='*60}\n")
+                return None
+
+    return None
 
 
 def list_exports(export_type=None):
