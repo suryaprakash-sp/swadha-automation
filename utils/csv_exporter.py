@@ -77,13 +77,18 @@ def save_to_csv(data, export_type, prompt_user=True):
     # Create folders if they don't exist
     create_export_folders()
 
-    # Prompt user if required
-    if prompt_user:
+    # Check if running from Streamlit UI with auto-export enabled
+    auto_export = os.environ.get('STREAMLIT_AUTO_EXPORT') == 'true'
+
+    # Prompt user if required (skip prompt if auto_export is enabled)
+    if prompt_user and not auto_export:
         print(f"\n[EXPORT] {export_type}")
         response = input("   Save as CSV? (y/n): ").strip().lower()
         if response != 'y':
             print("   Skipped.")
             return None
+    elif auto_export:
+        print(f"\n[EXPORT] {export_type} (auto-export enabled)")
 
     # Generate filename
     filepath = generate_filename(export_type)

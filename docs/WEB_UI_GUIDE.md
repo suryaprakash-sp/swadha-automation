@@ -61,6 +61,12 @@ http://localhost:8501
 
 Execute the core automation pipeline with visual progress indicators.
 
+**Settings:**
+
+A checkbox in the sidebar allows you to control CSV export behavior:
+- **Auto-export to CSV** (checked by default): Automatically exports all data to CSV files after transformations without prompting
+- When unchecked: The operations will still complete but won't create CSV exports
+
 **Available Operations:**
 
 #### Step 0: Sync MyBillBook
@@ -84,13 +90,17 @@ Execute the core automation pipeline with visual progress indicators.
 #### Run All Operations
 - **Purpose**: Execute all three steps in sequence
 - **Progress**: Visual progress bar with step-by-step status
+- **Clean Interface**: Individual operation buttons are hidden during execution to prevent duplicate runs
 - **Success**: Celebration animation on completion
+- **Back Button**: After completion or error, click "Back to Operations" to return to the main view
 - **Error Handling**: Detailed error messages with tracebacks
 
 **Tips:**
-- Expand "View Details" to see operation logs
+- Expand "View Details" to see operation logs (for individual operations)
 - Expand "Error Traceback" if something goes wrong
 - Use "Run All" for complete pipeline execution
+- The interface automatically hides individual buttons when "Run All" is active
+- Enable "Auto-export to CSV" in the sidebar to save all outputs automatically
 
 ### 2. 🏷️ Label Generator
 

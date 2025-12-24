@@ -69,6 +69,10 @@ if 'last_operation' not in st.session_state:
     st.session_state.last_operation = None
 if 'operation_status' not in st.session_state:
     st.session_state.operation_status = None
+if 'auto_export_csv' not in st.session_state:
+    st.session_state.auto_export_csv = True  # Default to auto-export
+if 'running_operation' not in st.session_state:
+    st.session_state.running_operation = False
 
 
 def init_sheets_manager():
@@ -96,116 +100,161 @@ def main_operations_page():
 
     sheets = st.session_state.sheets_manager
 
-    # Create columns for operations
-    col1, col2 = st.columns(2)
+    # CSV Export Settings
+    st.sidebar.markdown("### ⚙️ Settings")
+    st.session_state.auto_export_csv = st.sidebar.checkbox(
+        "Auto-export to CSV",
+        value=st.session_state.auto_export_csv,
+        help="Automatically export data to CSV files after transformations (no prompts)"
+    )
 
-    with col1:
-        st.subheader("🔄 Step 0: Sync MyBillBook")
-        st.write("Fetch latest inventory from MyBillBook API")
-        if st.button("🔄 Sync MyBillBook Inventory", key="sync_btn"):
-            try:
-                with st.spinner("Syncing MyBillBook inventory..."):
-                    # Capture output
-                    import io
-                    from contextlib import redirect_stdout
+    # Monkeypatch the export functions to respect the auto_export setting
+    import os
+    if st.session_state.auto_export_csv:
+        os.environ['STREAMLIT_AUTO_EXPORT'] = 'true'
+    else:
+        os.environ.pop('STREAMLIT_AUTO_EXPORT', None)
 
-                    f = io.StringIO()
-                    with redirect_stdout(f):
-                        result = sync_to_sheets(sheets)
+    # Only show individual operations if not currently running "Run All"
+    if not st.session_state.running_operation:
+        # Create columns for operations
+        col1, col2 = st.columns(2)
 
-                    output = f.getvalue()
+        with col1:
+            st.subheader("🔄 Step 0: Sync MyBillBook")
+            st.write("Fetch latest inventory from MyBillBook API")
+            if st.button("🔄 Sync MyBillBook Inventory", key="sync_btn"):
+                try:
+                    with st.spinner("Syncing MyBillBook inventory..."):
+                        # Capture output
+                        import io
+                        from contextlib import redirect_stdout
 
-                    if result:
-                        st.success("✅ MyBillBook inventory synced successfully!")
+                        f = io.StringIO()
+                        with redirect_stdout(f):
+                            result = sync_to_sheets(sheets)
+
+                        output = f.getvalue()
+
+                        if result:
+                            st.success("✅ MyBillBook inventory synced successfully!")
+                            with st.expander("View Details"):
+                                st.code(output)
+                        else:
+                            st.error("❌ Sync failed. Check details below.")
+                            with st.expander("Error Details"):
+                                st.code(output)
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    with st.expander("Error Traceback"):
+                        st.code(traceback.format_exc())
+
+            st.markdown("---")
+
+            st.subheader("🔀 Step 1: Consolidate Inventory")
+            st.write("Smart matching & consolidation")
+            if st.button("🔀 Run Transform 1", key="transform1_btn"):
+                try:
+                    with st.spinner("Consolidating inventory..."):
+                        import io
+                        from contextlib import redirect_stdout
+
+                        f = io.StringIO()
+                        with redirect_stdout(f):
+                            consolidate_inventory(sheets)
+
+                        output = f.getvalue()
+                        st.success("✅ Inventory consolidated successfully!")
                         with st.expander("View Details"):
                             st.code(output)
-                    else:
-                        st.error("❌ Sync failed. Check details below.")
-                        with st.expander("Error Details"):
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    with st.expander("Error Traceback"):
+                        st.code(traceback.format_exc())
+
+        with col2:
+            st.subheader("📤 Step 2: MyBillBook Export")
+            st.write("Generate ADD/UPDATE sheets for import")
+            if st.button("📤 Run Transform 2", key="transform2_btn"):
+                try:
+                    with st.spinner("Generating MyBillBook import data..."):
+                        import io
+                        from contextlib import redirect_stdout
+
+                        f = io.StringIO()
+                        with redirect_stdout(f):
+                            export_to_mybillbook(sheets)
+
+                        output = f.getvalue()
+                        st.success("✅ MyBillBook data exported successfully!")
+                        with st.expander("View Details"):
                             st.code(output)
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-                with st.expander("Error Traceback"):
-                    st.code(traceback.format_exc())
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    with st.expander("Error Traceback"):
+                        st.code(traceback.format_exc())
 
-        st.markdown("---")
+            st.markdown("---")
 
-        st.subheader("🔀 Step 1: Consolidate Inventory")
-        st.write("Smart matching & consolidation")
-        if st.button("🔀 Run Transform 1", key="transform1_btn"):
-            try:
-                with st.spinner("Consolidating inventory..."):
-                    import io
-                    from contextlib import redirect_stdout
+            st.subheader("⚡ Run All Operations")
+            st.write("Execute all steps in sequence")
+            if st.button("⚡ Run All (Steps 0-2)", key="run_all_btn", type="primary"):
+                st.session_state.running_operation = True
+                st.rerun()
 
-                    f = io.StringIO()
-                    with redirect_stdout(f):
-                        consolidate_inventory(sheets)
+    # Run All Operations execution (shown separately when running)
+    if st.session_state.running_operation:
+        st.subheader("⚡ Running All Operations")
+        try:
+            progress_bar = st.progress(0)
+            status_text = st.empty()
 
-                    output = f.getvalue()
-                    st.success("✅ Inventory consolidated successfully!")
-                    with st.expander("View Details"):
-                        st.code(output)
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-                with st.expander("Error Traceback"):
-                    st.code(traceback.format_exc())
+            # Step 0
+            status_text.text("Step 1/3: Syncing MyBillBook...")
+            progress_bar.progress(10)
+            import io
+            from contextlib import redirect_stdout
 
-    with col2:
-        st.subheader("📤 Step 2: MyBillBook Export")
-        st.write("Generate ADD/UPDATE sheets for import")
-        if st.button("📤 Run Transform 2", key="transform2_btn"):
-            try:
-                with st.spinner("Generating MyBillBook import data..."):
-                    import io
-                    from contextlib import redirect_stdout
-
-                    f = io.StringIO()
-                    with redirect_stdout(f):
-                        export_to_mybillbook(sheets)
-
-                    output = f.getvalue()
-                    st.success("✅ MyBillBook data exported successfully!")
-                    with st.expander("View Details"):
-                        st.code(output)
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-                with st.expander("Error Traceback"):
-                    st.code(traceback.format_exc())
-
-        st.markdown("---")
-
-        st.subheader("⚡ Run All Operations")
-        st.write("Execute all steps in sequence")
-        if st.button("⚡ Run All (Steps 0-2)", key="run_all_btn"):
-            try:
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-
-                # Step 0
-                status_text.text("Step 1/3: Syncing MyBillBook...")
-                progress_bar.progress(10)
+            f = io.StringIO()
+            with redirect_stdout(f):
                 sync_to_sheets(sheets)
-                progress_bar.progress(33)
+            progress_bar.progress(33)
 
-                # Step 1
-                status_text.text("Step 2/3: Consolidating inventory...")
+            # Step 1
+            status_text.text("Step 2/3: Consolidating inventory...")
+            f = io.StringIO()
+            with redirect_stdout(f):
                 consolidate_inventory(sheets)
-                progress_bar.progress(66)
+            progress_bar.progress(66)
 
-                # Step 2
-                status_text.text("Step 3/3: Generating MyBillBook data...")
+            # Step 2
+            status_text.text("Step 3/3: Generating MyBillBook data...")
+            f = io.StringIO()
+            with redirect_stdout(f):
                 export_to_mybillbook(sheets)
-                progress_bar.progress(100)
+            progress_bar.progress(100)
 
-                status_text.text("✅ All operations completed!")
-                st.success("🎉 All operations completed successfully!")
-                st.balloons()
+            status_text.text("✅ All operations completed!")
+            st.success("🎉 All operations completed successfully!")
+            st.balloons()
 
-            except Exception as e:
-                st.error(f"❌ Error during operations: {str(e)}")
-                with st.expander("Error Traceback"):
-                    st.code(traceback.format_exc())
+            # Reset flag
+            st.session_state.running_operation = False
+
+            # Add button to go back
+            if st.button("↩️ Back to Operations", key="back_btn"):
+                st.rerun()
+
+        except Exception as e:
+            st.error(f"❌ Error during operations: {str(e)}")
+            with st.expander("Error Traceback"):
+                st.code(traceback.format_exc())
+
+            # Reset flag on error
+            st.session_state.running_operation = False
+
+            if st.button("↩️ Back to Operations", key="back_btn_error"):
+                st.rerun()
 
 
 def label_generator_page():
