@@ -14,7 +14,8 @@ This project automates inventory data transformations for multiple use cases:
 
 ## 📖 Documentation
 
-- **[Simple Workflow Guide](docs/SIMPLE_WORKFLOW.md)** - Easy-to-understand guide for everyone (recommended for first-time users!)
+- **[Web UI Guide](docs/WEB_UI_GUIDE.md)** - Browser-based interface guide (recommended for new users!)
+- **[Simple Workflow Guide](docs/SIMPLE_WORKFLOW.md)** - Easy-to-understand guide for everyone
 - **[Detailed Workflow Diagram](docs/WORKFLOW_DIAGRAM.md)** - Technical workflow with visual diagrams
 - **[CSV Exports Guide](docs/CSV_EXPORTS.md)** - How to save timestamped backups of your data
 - **[MyBillBook Setup](docs/MYBILLBOOK_SETUP.md)** - How to configure MyBillBook API
@@ -97,7 +98,25 @@ Export to CSV → Print labels
 
 ## Usage
 
-Run the main script and follow the interactive menu:
+### Option 1: Web UI (Recommended)
+
+Launch the modern web interface:
+
+```cmd
+streamlit run app.py
+```
+
+The web interface will open in your browser with:
+- Visual progress indicators
+- Interactive label generator
+- CSV download buttons
+- One-click operations
+
+See **[Web UI Guide](docs/WEB_UI_GUIDE.md)** for detailed instructions.
+
+### Option 2: Command Line
+
+Run the CLI script and follow the interactive menu:
 
 ```cmd
 python main.py
