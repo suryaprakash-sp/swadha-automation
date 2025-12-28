@@ -10,7 +10,8 @@ This project automates inventory data transformations for multiple use cases:
 2. **Transform 2**: MyBillBook format (inventory management)
 
 **Standalone Tools:**
-- **Label Generator** (`generate_labels.py`): Generate WePrint labels from MyBillBook inventory
+- **Inventory Sync** (`scripts/mybillbook/sync_inventory.py`): Standalone MyBillBook inventory sync
+- **Label Generator** (`scripts/generate_labels.py`): Generate WePrint labels from MyBillBook inventory
 
 ## 📖 Documentation
 
@@ -51,10 +52,18 @@ Google Sheets ("myBillBook add" + "myBillBook update")
 ✅ Import to MyBillBook
 ```
 
-### Standalone Label Generator
+### Standalone Scripts
 
+**Inventory Sync:**
 ```
-Run: python generate_labels.py
+Run: python scripts/mybillbook/sync_inventory.py
+
+Fetches from MyBillBook API → Writes to Google Sheets
+```
+
+**Label Generator:**
+```
+Run: python scripts/generate_labels.py
 
 Reads: MyBillBook Inventory (synced data)
     ↓
@@ -89,7 +98,11 @@ Export to CSV → Print labels
 
 4. Run the script:
    ```cmd
-   python main.py
+   python scripts/main.py
+   ```
+   Or use the web UI:
+   ```cmd
+   streamlit run scripts/app.py
    ```
 
 5. On first run, a browser will open for authentication
@@ -103,7 +116,7 @@ Export to CSV → Print labels
 Launch the modern web interface:
 
 ```cmd
-streamlit run app.py
+streamlit run scripts/app.py
 ```
 
 The web interface will open in your browser with:
@@ -119,7 +132,7 @@ See **[Web UI Guide](docs/WEB_UI_GUIDE.md)** for detailed instructions.
 Run the CLI script and follow the interactive menu:
 
 ```cmd
-python main.py
+python scripts/main.py
 ```
 
 ### Menu Options
@@ -173,12 +186,21 @@ swadha-automation/
 ├── credentials.json                    # Google OAuth credentials (not in git)
 ├── token.json                          # OAuth token (not in git)
 ├── config.py                           # Configuration (Sheet ID, names)
-├── main.py                             # Main interactive script
 ├── requirements.txt                    # Python dependencies
 ├── README.md                           # This file
 ├── SETUP.md                            # Google Sheets setup instructions
 ├── .env.example                        # MyBillBook credentials template
+├── scripts/                            # ⭐ Main executable scripts
+│   ├── mybillbook/                     # MyBillBook-related scripts
+│   │   ├── sync_inventory.py           # Inventory sync
+│   │   └── README.md
+│   ├── README.md                       # Scripts documentation
+│   ├── main.py                         # CLI interactive menu
+│   ├── app.py                          # Streamlit web UI
+│   └── generate_labels.py              # Standalone label generator
 ├── docs/
+│   ├── WEB_UI_GUIDE.md                 # Web UI usage guide
+│   ├── SIMPLE_WORKFLOW.md              # Easy workflow guide
 │   ├── TRANSFORM1_CONSOLIDATE.md       # Transform 1 documentation
 │   ├── TRANSFORM2_MYBILLBOOK.md        # Transform 2 documentation
 │   ├── TRANSFORM3_WEPRINT.md           # Transform 3 documentation
@@ -191,8 +213,14 @@ swadha-automation/
 │   ├── transform1_consolidate.py       # Transform 1: Consolidate Inventory
 │   ├── transform2_mybillbook.py        # Transform 2: MyBillBook export
 │   └── transform3_weprint.py           # Transform 3: WePrint export
-└── utils/
-    └── sheets.py                       # Google Sheets API wrapper
+├── utils/
+│   ├── sheets.py                       # Google Sheets API wrapper
+│   └── csv_exporter.py                 # CSV export utilities
+└── csv_exports/                        # CSV export files (timestamped)
+    ├── mybillbook_inventory/           # MyBillBook inventory exports
+    ├── mybillbook_add/                 # ADD items exports
+    ├── mybillbook_update/              # UPDATE items exports
+    └── weprint/                        # WePrint label exports
 ```
 
 ## Configuration
