@@ -5,29 +5,34 @@ Loads data from Google Sheets into the analytics database
 """
 
 import sys
+import os
 from pathlib import Path
 from datetime import datetime
 import psycopg2
 from psycopg2.extras import execute_batch
+from dotenv import load_dotenv
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Load environment variables
+load_dotenv(Path(__file__).parent.parent / ".env")
+
 from utils.sheets import SheetsManager
 from config import (
-    SHEET_MYBILLBOOK,
+    SHEET_MYBILLBOOK_CURRENT,
     SHEET_SALES_INVOICES,
     SHEET_EXPENSES,
     SHEET_INVOICE_LINE_ITEMS,
 )
 
-# PostgreSQL connection settings (update with your credentials)
+# PostgreSQL connection settings from environment
 DB_CONFIG = {
-    "host": "localhost",
-    "port": 5432,
-    "database": "mybillbook_analytics",
-    "user": "postgres",
-    "password": "your_password_here",  # Update this
+    "host": os.getenv("POSTGRES_HOST", "localhost"),
+    "port": int(os.getenv("POSTGRES_PORT", 5432)),
+    "database": os.getenv("POSTGRES_DATABASE", "mybillbook_analytics"),
+    "user": os.getenv("POSTGRES_USER", "postgres"),
+    "password": os.getenv("POSTGRES_PASSWORD"),
 }
 
 # Sheet names
@@ -76,7 +81,7 @@ def sync_products(conn, sheets_manager):
     """Sync products/inventory to PostgreSQL"""
     print("\nSyncing Products (Inventory)...")
 
-    data = sheets_manager.read_sheet(SHEET_MYBILLBOOK)
+    data = sheets_manager.read_sheet(SHEET_MYBILLBOOK_CURRENT)
     if not data or len(data) < 2:
         print("  No product data found")
         return 0
