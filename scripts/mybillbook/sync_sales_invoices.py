@@ -92,6 +92,7 @@ def sync_sales_invoices_to_sheets(
         "Serial Number",
         "Contact Name",
         "Contact Type",
+        "Contact ID",
         "Total Amount",
         "Paid Amount",
         "Remaining Amount",
@@ -120,6 +121,7 @@ def sync_sales_invoices_to_sheets(
             voucher.get("serial_number", ""),
             voucher.get("contact_name", ""),
             voucher.get("contact_type", ""),
+            voucher.get("contact_id", ""),
             float(voucher.get("total_amount") or 0),
             float(voucher.get("initial_payment_amount") or 0),
             float(voucher.get("remaining_amount") or 0),
@@ -161,26 +163,27 @@ def sync_sales_invoices_to_sheets(
         sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"C2:C{last_row}")  # Serial Number
         sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"D2:D{last_row}")  # Contact Name
         sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"E2:E{last_row}")  # Contact Type
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"I2:I{last_row}")  # Payment Mode
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"J2:J{last_row}")  # Payment Type
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"K2:K{last_row}")  # Due Date
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"L2:L{last_row}")  # Status
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"M2:M{last_row}")  # Created At
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"N2:N{last_row}")  # ID
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"O2:O{last_row}")  # MBB ID
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"P2:P{last_row}")  # Share Link
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"Q2:Q{last_row}")  # Notes
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"R2:R{last_row}")  # Source
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"S2:S{last_row}")  # Ledger Category
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"T2:T{last_row}")  # Bank Account ID
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"U2:U{last_row}")  # Convertable ID
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"V2:V{last_row}")  # Recurring ID
-        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"W2:W{last_row}")  # E-Invoice Status
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"F2:F{last_row}")  # Contact ID
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"J2:J{last_row}")  # Payment Mode
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"K2:K{last_row}")  # Payment Type
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"L2:L{last_row}")  # Due Date
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"M2:M{last_row}")  # Status
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"N2:N{last_row}")  # Created At
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"O2:O{last_row}")  # ID
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"P2:P{last_row}")  # MBB ID
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"Q2:Q{last_row}")  # Share Link
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"R2:R{last_row}")  # Notes
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"S2:S{last_row}")  # Source
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"T2:T{last_row}")  # Ledger Category
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"U2:U{last_row}")  # Bank Account ID
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"V2:V{last_row}")  # Convertable ID
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"W2:W{last_row}")  # Recurring ID
+        sheets_manager.format_as_text(SALES_INVOICES_SHEET, f"X2:X{last_row}")  # E-Invoice Status
 
         # Numeric columns with 2 decimals
-        sheets_manager.format_as_number(SALES_INVOICES_SHEET, f"F2:F{last_row}", decimal_places=2)  # Total Amount
-        sheets_manager.format_as_number(SALES_INVOICES_SHEET, f"G2:G{last_row}", decimal_places=2)  # Paid Amount
-        sheets_manager.format_as_number(SALES_INVOICES_SHEET, f"H2:H{last_row}", decimal_places=2)  # Remaining Amount
+        sheets_manager.format_as_number(SALES_INVOICES_SHEET, f"G2:G{last_row}", decimal_places=2)  # Total Amount
+        sheets_manager.format_as_number(SALES_INVOICES_SHEET, f"H2:H{last_row}", decimal_places=2)  # Paid Amount
+        sheets_manager.format_as_number(SALES_INVOICES_SHEET, f"I2:I{last_row}", decimal_places=2)  # Remaining Amount
 
     print(f"\n[OK] Successfully synced {len(rows)} sales invoices to '{SALES_INVOICES_SHEET}' sheet!")
     print(f"     Date range: {start_date} to {end_date}")

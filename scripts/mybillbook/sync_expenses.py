@@ -103,6 +103,7 @@ def sync_expenses_to_sheets(
         "Source",
         "Bank Account ID",
         "Contact Name",
+        "Contact ID",
         "Share Link",
     ]
 
@@ -134,6 +135,7 @@ def sync_expenses_to_sheets(
             voucher.get("source", ""),
             voucher.get("bank_account_id", ""),
             voucher.get("contact_name", ""),
+            voucher.get("contact_id", ""),
             voucher.get("share_link", ""),
         ]
         rows.append(row)
@@ -167,7 +169,8 @@ def sync_expenses_to_sheets(
         sheets_manager.format_as_text(EXPENSES_SHEET, f"O2:O{last_row}")  # Source
         sheets_manager.format_as_text(EXPENSES_SHEET, f"P2:P{last_row}")  # Bank Account ID
         sheets_manager.format_as_text(EXPENSES_SHEET, f"Q2:Q{last_row}")  # Contact Name
-        sheets_manager.format_as_text(EXPENSES_SHEET, f"R2:R{last_row}")  # Share Link
+        sheets_manager.format_as_text(EXPENSES_SHEET, f"R2:R{last_row}")  # Contact ID
+        sheets_manager.format_as_text(EXPENSES_SHEET, f"S2:S{last_row}")  # Share Link
 
         # Numeric columns
         sheets_manager.format_as_number(EXPENSES_SHEET, f"F2:F{last_row}", decimal_places=0)  # Line Items Count

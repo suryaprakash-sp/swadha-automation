@@ -12,6 +12,7 @@ SHEET_MYBILLBOOK_UPDATE = "myBillBook update"
 SHEET_WEPRINT = "WePrint"
 SHEET_SALES_INVOICES = "Sales Invoices"  # MyBillBook sales invoices
 SHEET_EXPENSES = "Expenses"  # MyBillBook expenses
+SHEET_INVOICE_LINE_ITEMS = "Invoice Line Items"  # Individual products sold per invoice
 
 # OAuth Scopes
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']

@@ -109,6 +109,51 @@ python scripts/mybillbook/sync_expenses.py
 
 ---
 
+### 4. `sync_invoice_line_items.py`
+**Sync Individual Products Sold in Each Invoice to Google Sheets**
+
+Extracts every individual product sold from each sales invoice and creates a denormalized table with one row per product. This is useful for product-level sales analysis.
+
+**Usage:**
+```bash
+python scripts/mybillbook/sync_invoice_line_items.py
+```
+
+**What it does:**
+- Fetches ALL sales invoices from MyBillBook API
+- For each invoice, calls the detail API to get line items (products sold)
+- Creates one row per product with both invoice details AND product details
+- Lets you choose date range (last 30/90/365 days or custom)
+- Writes to Google Sheets in the "Invoice Line Items" sheet
+- Invoice number serves as the join key to link with sales invoices
+- Formats data with proper types
+- Creates automatic safety backups before clearing
+- Optionally exports to CSV for offline backup
+
+**Data Fields Synced (20 fields per line item):**
+- **Invoice Info**: Invoice Number, Date, Customer Name, Total, Payment Mode
+- **Product Info**: Item Name, SKU Code, Quantity, Unit
+- **Pricing**: Price Per Unit, MRP, Item Final Amount
+- **Discounts**: Discount, Discount Type, Discount Amount
+- **Tax**: GST %, Tax Included (Yes/No)
+- **Other**: Item Type, Description, Notes
+
+**Example Output:**
+```
+Invoice #525 | 2025-01-15 | John Doe | 390 | Cash | Charms 40 VBOC | CH40 | 6 | Pcs | 40 | 0 | | 0 | 18 | No | 240 | ...
+Invoice #525 | 2025-01-15 | John Doe | 390 | Cash | Bracelets 150 UVPV | BR150 | 1 | Pcs | 150 | 0 | | 0 | 18 | No | 150 | ...
+```
+
+**Requirements:**
+- MyBillBook API credentials configured in `.env` file
+- See `docs/MYBILLBOOK_SETUP.md` for setup instructions
+
+**Performance:**
+- Processes 500 invoices with ~1000 line items in about 3-5 minutes
+- Includes API rate limiting (0.5s delay every 10 invoices)
+
+---
+
 ## Coming Soon
 
 More MyBillBook scripts will be added here for different use cases:
@@ -124,10 +169,11 @@ More MyBillBook scripts will be added here for different use cases:
 **Current Structure:**
 ```
 scripts/mybillbook/
-├── README.md                   # This file
-├── sync_inventory.py           # Inventory sync script
-├── sync_sales_invoices.py      # Sales invoices sync script
-└── sync_expenses.py            # Expenses sync script
+├── README.md                      # This file
+├── sync_inventory.py              # Inventory sync script
+├── sync_sales_invoices.py         # Sales invoices sync script
+├── sync_expenses.py               # Expenses sync script
+└── sync_invoice_line_items.py     # Invoice line items (products) sync script
 ```
 
 **Run from project root:**
@@ -140,4 +186,7 @@ python scripts/mybillbook/sync_sales_invoices.py
 
 # Sync expenses
 python scripts/mybillbook/sync_expenses.py
+
+# Sync invoice line items (individual products per invoice)
+python scripts/mybillbook/sync_invoice_line_items.py
 ```

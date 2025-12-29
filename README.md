@@ -10,8 +10,13 @@ This project automates inventory data transformations for multiple use cases:
 2. **Transform 2**: MyBillBook format (inventory management)
 
 **Standalone Tools:**
-- **Inventory Sync** (`scripts/mybillbook/sync_inventory.py`): Standalone MyBillBook inventory sync
 - **Label Generator** (`scripts/generate_labels.py`): Generate WePrint labels from MyBillBook inventory
+
+**MyBillBook Data Sync Scripts:** (See `scripts/mybillbook/README.md` for details)
+- **Inventory Sync** (`scripts/mybillbook/sync_inventory.py`): Sync MyBillBook inventory to Google Sheets
+- **Sales Invoices Sync** (`scripts/mybillbook/sync_sales_invoices.py`): Sync all sales invoices with pagination
+- **Expenses Sync** (`scripts/mybillbook/sync_expenses.py`): Sync all expenses with pagination
+- **Invoice Line Items Sync** (`scripts/mybillbook/sync_invoice_line_items.py`): Extract individual products from each invoice
 
 ## 📖 Documentation
 
