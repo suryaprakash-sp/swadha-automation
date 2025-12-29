@@ -31,7 +31,7 @@ def safe_int(value):
         return 0
 
 
-def export_to_mybillbook(sheets_manager):
+def export_to_mybillbook(sheets_manager, auto_save_csv=False):
     """
     Export data to MyBillBook format (ADD and UPDATE sheets)
 
@@ -41,6 +41,10 @@ def export_to_mybillbook(sheets_manager):
       - Column J: "Inventory Item Barcode" (actual barcode to use)
     - If "Already Present" = Yes → UPDATE tab
     - If "Already Present" = No → ADD tab
+
+    Args:
+        sheets_manager: GoogleSheetsManager instance
+        auto_save_csv: If True, save CSV files without prompting (default: False)
     """
     print("Starting MyBillBook export...")
 
@@ -120,11 +124,11 @@ def export_to_mybillbook(sheets_manager):
                 inventory_barcode,    # Item code (Barcode from Column J)
                 "",                   # HSN Code
                 "",                   # GST Tax Rate(%)
-                inv_row[4],           # Sales Price (Column E)
+                safe_float(inv_row[4]),  # Sales Price (Column E) - remove commas
                 "Inclusive",          # Sales Tax inclusive
-                inv_row[2],           # Purchase Price (Column C)
+                safe_float(inv_row[2]),  # Purchase Price (Column C) - remove commas
                 "Inclusive",          # Purchase Tax inclusive
-                inv_row[4],           # MRP (same as Sales Price)
+                safe_float(inv_row[4]),  # MRP (same as Sales Price) - remove commas
                 safe_int(inv_row[3]), # Current stock (convert to int, remove commas)
                 0,                    # Low stock alert quantity
                 "No"                  # Visible on Online Store?
@@ -144,11 +148,11 @@ def export_to_mybillbook(sheets_manager):
                 inventory_barcode,    # Item code (Barcode from Column J)
                 "",                   # HSN Code
                 "",                   # GST Tax Rate(%)
-                inv_row[4],           # Sales Price
+                safe_float(inv_row[4]),  # Sales Price - remove commas
                 "Inclusive",          # Sales Tax inclusive
-                inv_row[2],           # Purchase Price
+                safe_float(inv_row[2]),  # Purchase Price - remove commas
                 "Inclusive",          # Purchase Tax inclusive
-                inv_row[4],           # MRP
+                safe_float(inv_row[4]),  # MRP - remove commas
                 safe_int(inv_row[3]), # Current stock (convert to int, remove commas)
                 0,                    # Low stock alert quantity
                 "Product",            # Item type
@@ -193,8 +197,9 @@ def export_to_mybillbook(sheets_manager):
     print(f"  UPDATE sheet: {update_count} items (existing items in MyBillBook)")
     print(f"  Total processed: {len(inventory_rows)} items")
 
-    # Export to CSV if user wants
+    # Export to CSV (prompt user unless auto_save_csv is True)
     print("\n" + "="*60)
-    export_sheet_data(sheets_manager, SHEET_MYBILLBOOK_ADD, "mybillbook_add", prompt_user=True)
-    export_sheet_data(sheets_manager, SHEET_MYBILLBOOK_UPDATE, "mybillbook_update", prompt_user=True)
+    prompt_user = not auto_save_csv
+    export_sheet_data(sheets_manager, SHEET_MYBILLBOOK_ADD, "mybillbook_add", prompt_user=prompt_user)
+    export_sheet_data(sheets_manager, SHEET_MYBILLBOOK_UPDATE, "mybillbook_update", prompt_user=prompt_user)
     print("="*60)

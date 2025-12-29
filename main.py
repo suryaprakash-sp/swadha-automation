@@ -67,7 +67,7 @@ def main():
                     print("\nStep 2: Consolidating Inventory...")
                     consolidate_inventory(sheets)
                     print("\nStep 3: Generating MyBillBook Import Data...")
-                    export_to_mybillbook(sheets)
+                    export_to_mybillbook(sheets, auto_save_csv=True)
                     print("\n" + "="*50)
                     print("[OK] ALL OPERATIONS COMPLETED SUCCESSFULLY!")
                     print("="*50)
