@@ -22,6 +22,49 @@ from utils.csv_exporter import list_exports, EXPORT_FOLDERS
 from config import SHEET_MYBILLBOOK_CURRENT, SHEET_WEPRINT
 
 
+# ===== CACHING FUNCTIONS FOR PERFORMANCE =====
+
+@st.cache_resource(show_spinner=False)
+def get_sheets_manager():
+    """Cache the SheetsManager instance to avoid reconnecting on every rerun"""
+    try:
+        return SheetsManager()
+    except Exception:
+        return None
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def get_sheet_data(sheet_name: str):
+    """Cache sheet data for 60 seconds to reduce API calls"""
+    try:
+        sheets = get_sheets_manager()
+        if sheets:
+            return sheets.read_sheet(sheet_name)
+        return None
+    except Exception:
+        return None
+
+
+@st.cache_data(ttl=30, show_spinner=False)
+def get_exports_list():
+    """Cache exports list for 30 seconds"""
+    return list_exports()
+
+
+@st.cache_data(ttl=30, show_spinner=False)
+def get_csv_file_count():
+    """Cache CSV file count"""
+    csv_folder = Path(__file__).parent.parent / "csv_exports"
+    return sum(1 for _ in csv_folder.rglob("*.csv")) if csv_folder.exists() else 0
+
+
+def clear_data_cache():
+    """Clear all data caches after operations that modify data"""
+    get_sheet_data.clear()
+    get_exports_list.clear()
+    get_csv_file_count.clear()
+
+
 # Page config
 st.set_page_config(
     page_title="Swadha",
@@ -645,13 +688,14 @@ if 'auto_export_csv' not in st.session_state:
 
 
 def init_sheets_manager():
-    """Initialize Google Sheets connection"""
+    """Initialize Google Sheets connection using cached manager"""
     if st.session_state.sheets_manager is None:
-        try:
-            st.session_state.sheets_manager = SheetsManager()
+        sheets = get_sheets_manager()
+        if sheets:
+            st.session_state.sheets_manager = sheets
             return True
-        except Exception as e:
-            st.error(f"Failed to connect: {str(e)}")
+        else:
+            st.error("Failed to connect to Google Sheets")
             return False
     return True
 
@@ -745,20 +789,16 @@ def dashboard_page():
 
     sheets = st.session_state.sheets_manager
 
-    # Metrics row
+    # Metrics row - using cached data for performance
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        try:
-            data = sheets.read_sheet(SHEET_MYBILLBOOK_CURRENT)
-            item_count = len(data) - 1 if data else 0
-        except:
-            item_count = 0
+        data = get_sheet_data(SHEET_MYBILLBOOK_CURRENT)
+        item_count = len(data) - 1 if data else 0
         st.metric("Items", f"{item_count:,}")
 
     with col2:
-        csv_folder = Path(__file__).parent.parent / "csv_exports"
-        file_count = sum(1 for _ in csv_folder.rglob("*.csv")) if csv_folder.exists() else 0
+        file_count = get_csv_file_count()
         st.metric("Exports", f"{file_count}")
 
     with col3:
@@ -897,6 +937,7 @@ def run_sync_operation(sheets):
             if result:
                 status.update(label="Sync complete", state="complete", expanded=False)
                 st.success("Inventory synced successfully")
+                clear_data_cache()  # Clear cache after data changes
                 if output.strip():
                     st.caption("Details:")
                     st.code(output, language="text")
@@ -923,6 +964,7 @@ def run_consolidate_operation(sheets):
 
             status.update(label="Consolidation complete", state="complete", expanded=False)
             st.success("Inventory consolidated")
+            clear_data_cache()  # Clear cache after data changes
             if output.strip():
                 st.caption("Details:")
                 st.code(output, language="text")
@@ -946,6 +988,7 @@ def run_export_operation(sheets):
 
             status.update(label="Export complete", state="complete", expanded=False)
             st.success("Export files generated")
+            clear_data_cache()  # Clear cache after data changes
             if output.strip():
                 st.caption("Details:")
                 st.code(output, language="text")
@@ -987,6 +1030,7 @@ def run_all_operations(sheets):
 
         status_text.markdown("**Complete** — All operations finished successfully")
         st.success("Pipeline completed. Your inventory is synced and exports are ready.")
+        clear_data_cache()  # Clear cache after all operations
         st.balloons()
 
     except Exception as e:
@@ -1009,130 +1053,126 @@ def labels_page():
 
     sheets = st.session_state.sheets_manager
 
-    try:
-        with st.spinner("Loading inventory..."):
-            data = sheets.read_sheet(SHEET_MYBILLBOOK_CURRENT)
+    # Use cached data for faster page loads
+    data = get_sheet_data(SHEET_MYBILLBOOK_CURRENT)
 
-        if not data or len(data) <= 1:
-            st.warning("Inventory is empty. Run sync first.")
-            return
+    if not data or len(data) <= 1:
+        st.warning("Inventory is empty. Run sync first.")
+        return
 
-        headers = data[0]
-        rows = data[1:]
-        df = pd.DataFrame(rows, columns=headers)
+    headers = data[0]
+    rows = data[1:]
+    df = pd.DataFrame(rows, columns=headers)
 
-        # Stats
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Total Items", f"{len(df):,}")
-        with col2:
-            total_qty = df['Quantity'].apply(lambda x: int(float(str(x).replace(',', ''))) if x else 0).sum()
-            st.metric("Total Qty", f"{total_qty:,}")
-        with col3:
-            categories = df['Category'].nunique() if 'Category' in df.columns else 0
-            st.metric("Categories", f"{categories}")
+    # Stats
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Items", f"{len(df):,}")
+    with col2:
+        total_qty = df['Quantity'].apply(lambda x: int(float(str(x).replace(',', ''))) if x else 0).sum()
+        st.metric("Total Qty", f"{total_qty:,}")
+    with col3:
+        categories = df['Category'].nunique() if 'Category' in df.columns else 0
+        st.metric("Categories", f"{categories}")
 
-        st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
 
-        # Search
-        st.markdown("""
-        <div class="section-header">
-            <h2 class="section-title">Search & Filter</h2>
-        </div>
-        """, unsafe_allow_html=True)
+    # Search
+    st.markdown("""
+    <div class="section-header">
+        <h2 class="section-title">Search & Filter</h2>
+    </div>
+    """, unsafe_allow_html=True)
 
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            search = st.text_input("Search", placeholder="Type product name...", label_visibility="collapsed")
-        with col2:
-            if 'Category' in df.columns:
-                cats = ['All'] + sorted(df['Category'].dropna().unique().tolist())
-                cat = st.selectbox("Category", cats, label_visibility="collapsed")
-            else:
-                cat = 'All'
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        search = st.text_input("Search", placeholder="Type product name...", label_visibility="collapsed")
+    with col2:
+        if 'Category' in df.columns:
+            cats = ['All'] + sorted(df['Category'].dropna().unique().tolist())
+            cat = st.selectbox("Category", cats, label_visibility="collapsed")
+        else:
+            cat = 'All'
 
-        # Filter
-        filtered = df.copy()
-        if search:
-            filtered = filtered[filtered['Name'].str.contains(search, case=False, na=False)]
-        if cat != 'All':
-            filtered = filtered[filtered['Category'] == cat]
+    # Filter
+    filtered = df.copy()
+    if search:
+        filtered = filtered[filtered['Name'].str.contains(search, case=False, na=False)]
+    if cat != 'All':
+        filtered = filtered[filtered['Category'] == cat]
 
-        st.caption(f"Showing {len(filtered)} items")
+    st.caption(f"Showing {len(filtered)} items")
 
-        st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
 
-        # Table
-        display_cols = ['Name', 'SKU Code', 'Quantity', 'Selling Price', 'Category']
-        available_cols = [c for c in display_cols if c in filtered.columns]
+    # Table
+    display_cols = ['Name', 'SKU Code', 'Quantity', 'Selling Price', 'Category']
+    available_cols = [c for c in display_cols if c in filtered.columns]
 
-        st.dataframe(
-            filtered[available_cols],
-            use_container_width=True,
-            height=300,
-            column_config={
-                "Name": st.column_config.TextColumn("Product", width="large"),
-                "SKU Code": st.column_config.TextColumn("SKU", width="small"),
-                "Quantity": st.column_config.NumberColumn("Qty", width="small"),
-                "Selling Price": st.column_config.NumberColumn("Price", format="₹%.2f"),
-                "Category": st.column_config.TextColumn("Category"),
-            }
+    st.dataframe(
+        filtered[available_cols],
+        use_container_width=True,
+        height=300,
+        column_config={
+            "Name": st.column_config.TextColumn("Product", width="large"),
+            "SKU Code": st.column_config.TextColumn("SKU", width="small"),
+            "Quantity": st.column_config.NumberColumn("Qty", width="small"),
+            "Selling Price": st.column_config.NumberColumn("Price", format="₹%.2f"),
+            "Category": st.column_config.TextColumn("Category"),
+        }
+    )
+
+    st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
+
+    # Generate section
+    st.markdown("""
+    <div class="section-header">
+        <h2 class="section-title">Generate Labels</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns([3, 1])
+
+    with col1:
+        method = st.radio(
+            "Method",
+            ["Use current quantities", "Manual entry"],
+            horizontal=True,
+            label_visibility="collapsed"
         )
 
-        st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
+    with col2:
+        generate = st.button("Generate Labels", type="primary", use_container_width=True)
 
-        # Generate section
-        st.markdown("""
-        <div class="section-header">
-            <h2 class="section-title">Generate Labels</h2>
-        </div>
-        """, unsafe_allow_html=True)
+    if generate and method == "Use current quantities":
+        with st.status("Generating labels...", expanded=True) as status:
+            try:
+                output = [["Product", "Barcode", "Price"]]
+                total = 0
 
-        col1, col2 = st.columns([3, 1])
+                for _, row in filtered.iterrows():
+                    name = row.get('Name', '')
+                    sku = row.get('SKU Code', '')
+                    price = row.get('Selling Price', '')
+                    qty_str = str(row.get('Quantity', 0)).replace(',', '')
+                    qty = int(float(qty_str)) if qty_str else 0
 
-        with col1:
-            method = st.radio(
-                "Method",
-                ["Use current quantities", "Manual entry"],
-                horizontal=True,
-                label_visibility="collapsed"
-            )
+                    for _ in range(qty):
+                        output.append([name, sku, price])
+                        total += 1
 
-        with col2:
-            generate = st.button("Generate Labels", type="primary", use_container_width=True)
+                sheets.clear_sheet(SHEET_WEPRINT)
+                sheets.write_sheet(SHEET_WEPRINT, output)
 
-        if generate and method == "Use current quantities":
-            with st.status("Generating labels...", expanded=True) as status:
-                try:
-                    output = [["Product", "Barcode", "Price"]]
-                    total = 0
+                if len(output) > 1:
+                    sheets.format_as_text(SHEET_WEPRINT, f"B2:B{len(output)}")
 
-                    for _, row in filtered.iterrows():
-                        name = row.get('Name', '')
-                        sku = row.get('SKU Code', '')
-                        price = row.get('Selling Price', '')
-                        qty_str = str(row.get('Quantity', 0)).replace(',', '')
-                        qty = int(float(qty_str)) if qty_str else 0
+                status.update(label="Labels generated", state="complete")
+                st.success(f"Generated {total:,} labels")
 
-                        for _ in range(qty):
-                            output.append([name, sku, price])
-                            total += 1
-
-                    sheets.clear_sheet(SHEET_WEPRINT)
-                    sheets.write_sheet(SHEET_WEPRINT, output)
-
-                    if len(output) > 1:
-                        sheets.format_as_text(SHEET_WEPRINT, f"B2:B{len(output)}")
-
-                    status.update(label="Labels generated", state="complete")
-                    st.success(f"Generated {total:,} labels")
-
-                except Exception as e:
-                    status.update(label="Error", state="error")
-                    st.error(f"Error: {str(e)}")
-
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+            except Exception as e:
+                status.update(label="Error", state="error")
+                st.error(f"Error: {str(e)}")
 
 
 def exports_page():
@@ -1148,88 +1188,85 @@ def exports_page():
     if 'preview_file' not in st.session_state:
         st.session_state.preview_file = None
 
-    try:
-        files = list_exports()
+    # Use cached exports list for performance
+    files = get_exports_list()
 
-        if not files:
-            st.markdown("""
-            <div class="empty-state">
-                <div class="empty-state-icon">↓</div>
-                <p>No exports yet</p>
-                <p style="font-size: 0.85rem;">Run operations to generate CSV files</p>
-            </div>
-            """, unsafe_allow_html=True)
-            return
+    if not files:
+        st.markdown("""
+        <div class="empty-state">
+            <div class="empty-state-icon">↓</div>
+            <p>No exports yet</p>
+            <p style="font-size: 0.85rem;">Run operations to generate CSV files</p>
+        </div>
+        """, unsafe_allow_html=True)
+        return
 
-        # Stats
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Files", f"{len(files)}")
-        with col2:
-            total_size = sum(f.stat().st_size for f in files)
-            st.metric("Total Size", f"{total_size / 1024 / 1024:.1f} MB")
-        with col3:
-            folders = len(set(f.parent.name for f in files))
-            st.metric("Categories", f"{folders}")
+    # Stats
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Files", f"{len(files)}")
+    with col2:
+        total_size = sum(f.stat().st_size for f in files)
+        st.metric("Total Size", f"{total_size / 1024 / 1024:.1f} MB")
+    with col3:
+        folders = len(set(f.parent.name for f in files))
+        st.metric("Categories", f"{folders}")
 
-        st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
 
-        # Filter
-        export_type = st.selectbox(
-            "Filter",
-            ["All"] + list(EXPORT_FOLDERS.keys()),
-            label_visibility="collapsed"
-        )
+    # Filter
+    export_type = st.selectbox(
+        "Filter",
+        ["All"] + list(EXPORT_FOLDERS.keys()),
+        label_visibility="collapsed"
+    )
 
-        if export_type != "All":
-            files = [f for f in files if f.parent.name == EXPORT_FOLDERS.get(export_type, export_type)]
+    if export_type != "All":
+        files = [f for f in files if f.parent.name == EXPORT_FOLDERS.get(export_type, export_type)]
 
-        st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
 
-        # Group by folder
-        by_folder = {}
-        for f in files:
-            folder = f.parent.name
-            if folder not in by_folder:
-                by_folder[folder] = []
-            by_folder[folder].append(f)
+    # Group by folder
+    by_folder = {}
+    for f in files:
+        folder = f.parent.name
+        if folder not in by_folder:
+            by_folder[folder] = []
+        by_folder[folder].append(f)
 
-        # Display
-        for folder, folder_files in sorted(by_folder.items()):
-            with st.expander(f"**{folder}** ({len(folder_files)} files)", expanded=True):
-                for fp in sorted(folder_files, reverse=True)[:10]:
-                    col1, col2, col3 = st.columns([4, 1, 1])
+    # Display
+    for folder, folder_files in sorted(by_folder.items()):
+        with st.expander(f"**{folder}** ({len(folder_files)} files)", expanded=True):
+            for fp in sorted(folder_files, reverse=True)[:10]:
+                col1, col2, col3 = st.columns([4, 1, 1])
 
-                    with col1:
-                        size = fp.stat().st_size
-                        mod = datetime.fromtimestamp(fp.stat().st_mtime)
-                        st.markdown(f"**{fp.name}**")
-                        st.caption(f"{size:,} bytes · {mod.strftime('%Y-%m-%d %H:%M')}")
+                with col1:
+                    size = fp.stat().st_size
+                    mod = datetime.fromtimestamp(fp.stat().st_mtime)
+                    st.markdown(f"**{fp.name}**")
+                    st.caption(f"{size:,} bytes · {mod.strftime('%Y-%m-%d %H:%M')}")
 
-                    with col2:
-                        key = str(fp).replace('\\', '_').replace('/', '_').replace(':', '_')
-                        if st.button("Preview", key=f"prev_{key}"):
-                            st.session_state.preview_file = str(fp)
+                with col2:
+                    key = str(fp).replace('\\', '_').replace('/', '_').replace(':', '_')
+                    if st.button("Preview", key=f"prev_{key}"):
+                        st.session_state.preview_file = str(fp)
 
-                    with col3:
-                        with open(fp, 'rb') as f:
-                            st.download_button(
-                                "Download",
-                                data=f,
-                                file_name=fp.name,
-                                mime="text/csv",
-                                key=f"dl_{key}"
-                            )
+                with col3:
+                    with open(fp, 'rb') as f:
+                        st.download_button(
+                            "Download",
+                            data=f,
+                            file_name=fp.name,
+                            mime="text/csv",
+                            key=f"dl_{key}"
+                        )
 
-                    if st.session_state.preview_file == str(fp):
-                        try:
-                            preview_df = pd.read_csv(fp)
-                            st.dataframe(preview_df.head(20), use_container_width=True)
-                        except Exception as e:
-                            st.error(f"Preview error: {e}")
-
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+                if st.session_state.preview_file == str(fp):
+                    try:
+                        preview_df = pd.read_csv(fp)
+                        st.dataframe(preview_df.head(20), use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Preview error: {e}")
 
 
 def settings_page():
