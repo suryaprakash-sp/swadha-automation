@@ -209,34 +209,34 @@ st.markdown("""
         justify-content: center;
         font-size: 20px;
         background: var(--bg-secondary);
-        color: var(--text-primary);
+        color: #1c1c1c !important;
     }
 
-    .card-icon.sync { background: #e3f2fd; color: #1565c0; }
-    .card-icon.transform { background: #fce4ec; color: #c2185b; }
-    .card-icon.export { background: #e8f5e9; color: #2e7d32; }
-    .card-icon.primary { background: var(--accent-subtle); color: #8b6914; }
+    .card-icon.sync { background: #e3f2fd !important; color: #1565c0 !important; }
+    .card-icon.transform { background: #fce4ec !important; color: #c2185b !important; }
+    .card-icon.export { background: #e8f5e9 !important; color: #2e7d32 !important; }
+    .card-icon.primary { background: #f5f0e1 !important; color: #8b6914 !important; }
 
     .card-title {
         font-family: var(--font-heading);
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: var(--text-primary);
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        color: #1a1a1a !important;
         margin: 0;
     }
 
     .card-subtitle {
-        font-size: 0.75rem;
-        color: #777;
+        font-size: 0.75rem !important;
+        color: #333 !important;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin: 0;
-        font-weight: 500;
+        font-weight: 700 !important;
     }
 
     .card-desc {
-        color: #555;
-        font-size: 0.9rem;
+        color: #333 !important;
+        font-size: 0.9rem !important;
         line-height: 1.5;
         margin: 0;
     }
@@ -781,15 +781,15 @@ def dashboard_page():
 
     with col_main:
         st.markdown("""
-        <div class="card" style="border-color: var(--accent); border-width: 2px;">
+        <div class="card" style="border-color: #c9a227; border-width: 2px;">
             <div class="card-header">
-                <div class="card-icon primary">◈</div>
+                <div class="card-icon primary" style="background: #f5f0e1; color: #8b6914;">◈</div>
                 <div>
-                    <p class="card-subtitle">Recommended</p>
-                    <h3 class="card-title">Run Complete Pipeline</h3>
+                    <p class="card-subtitle" style="color: #555; font-weight: 600;">Recommended</p>
+                    <h3 class="card-title" style="color: #1c1c1c; font-weight: 600;">Run Complete Pipeline</h3>
                 </div>
             </div>
-            <p class="card-desc">Execute the full sync workflow: fetch inventory from MyBillBook, consolidate items, and generate export files.</p>
+            <p class="card-desc" style="color: #444;">Execute the full sync workflow: fetch inventory from MyBillBook, consolidate items, and generate export files.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -801,18 +801,18 @@ def dashboard_page():
 
     with col_info:
         st.markdown("""
-        <div style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: 20px; height: 100%;">
-            <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #666; margin-bottom: 16px; font-weight: 600;">Pipeline Steps</p>
-            <div class="pipeline-step" style="color: #333;">
-                <span class="pipeline-num" style="background: #d1cfc9; color: #333;">1</span>
+        <div style="background: #f0eeeb; border-radius: 10px; padding: 20px; height: 100%;">
+            <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #555; margin-bottom: 16px; font-weight: 700;">Pipeline Steps</p>
+            <div style="display: flex; align-items: center; padding: 10px 0; color: #1c1c1c; font-size: 0.95rem;">
+                <span style="background: #c9a227; color: #1c1c1c; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; margin-right: 12px;">1</span>
                 Sync inventory
             </div>
-            <div class="pipeline-step" style="color: #333;">
-                <span class="pipeline-num" style="background: #d1cfc9; color: #333;">2</span>
+            <div style="display: flex; align-items: center; padding: 10px 0; color: #1c1c1c; font-size: 0.95rem;">
+                <span style="background: #c9a227; color: #1c1c1c; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; margin-right: 12px;">2</span>
                 Consolidate items
             </div>
-            <div class="pipeline-step" style="color: #333;">
-                <span class="pipeline-num" style="background: #d1cfc9; color: #333;">3</span>
+            <div style="display: flex; align-items: center; padding: 10px 0; color: #1c1c1c; font-size: 0.95rem;">
+                <span style="background: #c9a227; color: #1c1c1c; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; margin-right: 12px;">3</span>
                 Generate exports
             </div>
         </div>
@@ -833,13 +833,13 @@ def dashboard_page():
         st.markdown("""
         <div class="card">
             <div class="card-header">
-                <div class="card-icon sync">↻</div>
+                <div class="card-icon sync" style="background: #e3f2fd; color: #1565c0;">↻</div>
                 <div>
-                    <p class="card-subtitle">Step 1</p>
-                    <h3 class="card-title">Sync Inventory</h3>
+                    <p class="card-subtitle" style="color: #555; font-weight: 600;">Step 1</p>
+                    <h3 class="card-title" style="color: #1c1c1c; font-weight: 600;">Sync Inventory</h3>
                 </div>
             </div>
-            <p class="card-desc">Fetch latest data from MyBillBook API and update Google Sheet.</p>
+            <p class="card-desc" style="color: #444;">Fetch latest data from MyBillBook API and update Google Sheet.</p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
@@ -850,13 +850,13 @@ def dashboard_page():
         st.markdown("""
         <div class="card">
             <div class="card-header">
-                <div class="card-icon transform">⇄</div>
+                <div class="card-icon transform" style="background: #fce4ec; color: #c2185b;">⇄</div>
                 <div>
-                    <p class="card-subtitle">Step 2</p>
-                    <h3 class="card-title">Consolidate</h3>
+                    <p class="card-subtitle" style="color: #555; font-weight: 600;">Step 2</p>
+                    <h3 class="card-title" style="color: #1c1c1c; font-weight: 600;">Consolidate</h3>
                 </div>
             </div>
-            <p class="card-desc">Smart matching to merge duplicates and reconcile inventory.</p>
+            <p class="card-desc" style="color: #444;">Smart matching to merge duplicates and reconcile inventory.</p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
@@ -867,13 +867,13 @@ def dashboard_page():
         st.markdown("""
         <div class="card">
             <div class="card-header">
-                <div class="card-icon export">↗</div>
+                <div class="card-icon export" style="background: #e8f5e9; color: #2e7d32;">↗</div>
                 <div>
-                    <p class="card-subtitle">Step 3</p>
-                    <h3 class="card-title">Export Data</h3>
+                    <p class="card-subtitle" style="color: #555; font-weight: 600;">Step 3</p>
+                    <h3 class="card-title" style="color: #1c1c1c; font-weight: 600;">Export Data</h3>
                 </div>
             </div>
-            <p class="card-desc">Generate ADD and UPDATE sheets for MyBillBook import.</p>
+            <p class="card-desc" style="color: #444;">Generate ADD and UPDATE sheets for MyBillBook import.</p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
