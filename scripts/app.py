@@ -209,12 +209,13 @@ st.markdown("""
         justify-content: center;
         font-size: 20px;
         background: var(--bg-secondary);
+        color: var(--text-primary);
     }
 
-    .card-icon.sync { background: #e3f2fd; }
-    .card-icon.transform { background: #fce4ec; }
-    .card-icon.export { background: #e8f5e9; }
-    .card-icon.primary { background: var(--accent-subtle); }
+    .card-icon.sync { background: #e3f2fd; color: #1565c0; }
+    .card-icon.transform { background: #fce4ec; color: #c2185b; }
+    .card-icon.export { background: #e8f5e9; color: #2e7d32; }
+    .card-icon.primary { background: var(--accent-subtle); color: #8b6914; }
 
     .card-title {
         font-family: var(--font-heading);
@@ -226,14 +227,15 @@ st.markdown("""
 
     .card-subtitle {
         font-size: 0.75rem;
-        color: var(--text-muted);
+        color: #777;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin: 0;
+        font-weight: 500;
     }
 
     .card-desc {
-        color: var(--text-secondary);
+        color: #555;
         font-size: 0.9rem;
         line-height: 1.5;
         margin: 0;
@@ -321,6 +323,29 @@ st.markdown("""
     .stButton > button[kind="secondary"]:hover {
         background: var(--bg-secondary) !important;
         border-color: var(--text-muted) !important;
+    }
+
+    /* Sidebar Buttons - Dark theme */
+    [data-testid="stSidebar"] .stButton > button {
+        background: transparent !important;
+        color: rgba(255,255,255,0.7) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: rgba(255,255,255,0.1) !important;
+        color: #fff !important;
+        border-color: rgba(255,255,255,0.25) !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button[kind="primary"] {
+        background: var(--accent) !important;
+        color: var(--bg-dark) !important;
+        border: none !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
+        background: var(--accent-hover) !important;
     }
 
     /* Primary Action Button */
@@ -777,17 +802,17 @@ def dashboard_page():
     with col_info:
         st.markdown("""
         <div style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: 20px; height: 100%;">
-            <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 16px;">Pipeline Steps</p>
-            <div class="pipeline-step" style="color: var(--text-secondary);">
-                <span class="pipeline-num" style="background: var(--border);">1</span>
+            <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #666; margin-bottom: 16px; font-weight: 600;">Pipeline Steps</p>
+            <div class="pipeline-step" style="color: #333;">
+                <span class="pipeline-num" style="background: #d1cfc9; color: #333;">1</span>
                 Sync inventory
             </div>
-            <div class="pipeline-step" style="color: var(--text-secondary);">
-                <span class="pipeline-num" style="background: var(--border);">2</span>
+            <div class="pipeline-step" style="color: #333;">
+                <span class="pipeline-num" style="background: #d1cfc9; color: #333;">2</span>
                 Consolidate items
             </div>
-            <div class="pipeline-step" style="color: var(--text-secondary);">
-                <span class="pipeline-num" style="background: var(--border);">3</span>
+            <div class="pipeline-step" style="color: #333;">
+                <span class="pipeline-num" style="background: #d1cfc9; color: #333;">3</span>
                 Generate exports
             </div>
         </div>
@@ -872,7 +897,8 @@ def run_sync_operation(sheets):
             if result:
                 status.update(label="Sync complete", state="complete", expanded=False)
                 st.success("Inventory synced successfully")
-                with st.expander("View details"):
+                if output.strip():
+                    st.caption("Details:")
                     st.code(output, language="text")
             else:
                 status.update(label="Sync failed", state="error")
@@ -897,7 +923,8 @@ def run_consolidate_operation(sheets):
 
             status.update(label="Consolidation complete", state="complete", expanded=False)
             st.success("Inventory consolidated")
-            with st.expander("View details"):
+            if output.strip():
+                st.caption("Details:")
                 st.code(output, language="text")
         except Exception as e:
             status.update(label="Error", state="error")
@@ -919,7 +946,8 @@ def run_export_operation(sheets):
 
             status.update(label="Export complete", state="complete", expanded=False)
             st.success("Export files generated")
-            with st.expander("View details"):
+            if output.strip():
+                st.caption("Details:")
                 st.code(output, language="text")
         except Exception as e:
             status.update(label="Error", state="error")
