@@ -335,7 +335,9 @@ def label_generator_page():
                                 name = row.get('Name', '')
                                 sku = row.get('SKU Code', '')
                                 price = row.get('Selling Price', '')
-                                qty = int(float(row.get('Quantity', 0)))
+                                # Remove commas from quantity before converting to float
+                                qty_str = str(row.get('Quantity', 0)).replace(',', '')
+                                qty = int(float(qty_str)) if qty_str else 0
 
                                 for _ in range(qty):
                                     output.append([name, sku, price])

@@ -75,3 +75,6 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+
+# Playwright MCP screenshots
+.playwright-mcp/
